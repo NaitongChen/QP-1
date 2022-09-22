@@ -4,5 +4,40 @@
 
 \section{Summary}
 
+% In this paper I cite~\citep{james:2005}. But \citet{james:2005} cites me.
 
-In this paper I cite~\citep{james:2005}. But \citet{james:2005} cites me.
+\citet{tibshirani2015stein}
+
+\textbf{Stein's Lemma}:
+
+\begin{itemize}
+\item (univariate) Let $Z\sim\distNorm(0,1)$. Let $f:\reals\to\reals$ be absolutely continuous, with derivative $f'$ (and assume that $\EE\left[ \abs{f'(Z)} \right] < \infty$). Then $\EE\left[ Zf(Z) \right] = \EE\left[ f'(Z) \right]$.
+\item (extesion) Let $X\sim\distNorm(\mu, \sigma^2)$. Then $\frac{1}{\sigma^2}\EE\left[ (x-\mu)f(x) \right] = \EE\left[ f'(X) \right]$.
+\item (multivariate) Let $X\sim\distNorm(\mu, \sigma^2I)$, where $\mu\in\reals^n$ and $\sigma^2I\in\reals^{n\times n}$. Let $f: \reals^n\to\reals$ be a function such that, for each $i=1,\cdots,n$ and almost every $x_{-i}\in\reals^{n-1}$, $f(\cdot, x_{-i}):\reals\to\reals$ is absolutely continuous (and assume $\|f(X)\|_2 < \infty$). Then $\frac{1}{\sigma^2}\EE\left[ (X-\mu)f(X) \right] = \EE\left[ \nabla f(X) \right]$.
+\item (extension) Let $f=(f_1,\cdots,f_n)$, then
+\[
+&\frac{1}{\sigma^2}\EE\left[ (X-\mu)f_i(X) \right] = \EE\left[ \nabla f_i(X)\right] \\
+\implies &\frac{1}{\sigma^2}\sum_{i=1}^n\cov(X_i, f_i(X)) = \frac{1}{\sigma^2}\sum_{i=1}^n \EE\left[ (X_i - \mu_i)f_i(X) \right] = \EE\left[ \sum_{i=1}^n \frac{\partial f_i}{\partial X_i}(X) \right].
+\]
+\end{itemize}
+
+\textbf{Stein's Unbiased Risk Estimate (SURE)}:
+
+Given samples $y\sim\distNorm\left( \mu, \sigma^2I \right)$, and a function $\hat{\mu}: \reals^n \to \reals^n$, $\hat{\mu}$ is a fitting procedure that, from $y$, provides an estimate $\hat{\mu}(y)$ of the underlying (unknown) mean $\mu$. Then
+\[
+R &= \EE_{y}\| \mu - \hat{\mu}(y) \|^2\\
+ &= -n\sigma^2 + \EE \| y - \hat{\mu} \|_2^2 + 2\sigma^2 \text{df}(\hat{\mu})\\
+ &= -n\sigma^2 + \EE \| y - \hat{\mu} \|_2^2 + 2\sum_{i=1}^n \cov\left( y_i, \hat{\mu}_i \right),
+\]
+where $\text{df}(\hat{\mu}) = \frac{1}{\sigma^2}\sum_{i=1}^n \cov(y_i, \hat{\mu}_i)$. And
+\[
+\hat{R} = -n\sigma^2 + \| y - \hat{\mu}(y) \|_2^2 + 2\sigma^2 \sum_{i=1}^n \frac{\partial \hat{\mu}_i}{\partial y_i}(y)
+\]
+is an unbiased estimate for $R$.
+
+\textbf{Extending SURE to regularized estimators}:
+
+Now suppose $\hat{\mu}_\lambda$ depends on $\lambda\in\Lambda$, which controls the degree of regularization to our estimator, and assume $\sigma$ is known, we can find the optimal $\lambda$, denoted $\hat{\lambda}$ by
+\[
+\hat{\lambda} = \argmin_{\sigma\in\Sigma} \| y - \hat{\mu}_\lambda(y) \|_2^2 + 2\sigma^2 \sum_{i=1}^n \frac{\partial \hat{\mu}_{\lambda, i}}{\partial y_i}(y).
+\]
