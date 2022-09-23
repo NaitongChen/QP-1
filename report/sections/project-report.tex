@@ -3,3 +3,28 @@
 % Project report section
 
 \section{Project report}
+
+\textbf{SURE with Ridge Regression:}
+
+Let $y\sim\distNorm\left( X^T\beta, \sigma^2 \right)$, where $y\in\reals$ and $X\in\reals^{p+1}$, $X$ constant. Then with $\biX = \begin{bmatrix} X_1^T \\ \vdots \\ X_n^T \end{bmatrix}$, we have $\biy\sim\distNorm\left( \biX\beta, \sigma^2I \right)$, where $\biy\in\reals^n$ and $\biX\in\reals^{n\times(p+1)}$.
+
+We know that $\hat{\beta}_{\text{ridge}} = \left( \biX^T\biX + \lambda I_{p+1} \right)^{-1}\biX^T\biy$, then 
+\[
+\hat{\mu}_\lambda(\biy) &= \biX\hat{\beta}_{\text{ridge}} = \biX\left( \biX^T\biX + \lambda I_{p+1} \right)^{-1}\biX^T\biy\\
+\hat{\mu}_{\lambda, i}(\biy) &= X_i^T\hat{\beta}_{\text{ridge}} = X_i^T\left( \biX^T\biX + \lambda I_{p+1} \right)^{-1}\biX^T\biy
+\]
+Then
+\[
+\frac{\hat{\mu}_{\lambda, i}(\biy)}{\partial y_i} &= \frac{\partial}{\partial y_i} \left ( X_i^T \left( \biX^T\biX + \lambda I_{p+1} \right)^{-1}\biX^T\biy \right)\\
+&= \frac{\partial}{\partial y_i} F_i \biy \quad\quad (F_i \defas X_i^T\left( \biX^T\biX + \lambda I_{p+1} \right)^{-1}\biX^T \in \reals^{n})\\
+&= F_{i,i}\\
+&= \left( X_i^T\left( \biX^T\biX + \lambda I_{p+1} \right)^{-1}\biX^T \right)_i.
+\]
+We can now write
+\[
+\hat{R} &= -n\sigma^2 + \| \biy - \hat{\mu}_\lambda(\biy) \|_2^2 + 2\sigma^2 \sum_{i=1}^n \left( X_i^T\left( \biX^T\biX + \lambda I_{p+1} \right)^{-1}\biX^T \right)_i\\
+&= -n\sigma^2 + \| \biy - \hat{\mu}_\lambda(\biy) \|_2^2 + 2\sigma^2 \tr\left( \biX\left( \biX^T\biX + \lambda I_{p+1} \right)^{-1}\biX^T \right)\\
+&= -n\sigma^2 + \| \biy - \hat{\mu}_\lambda(\biy) \|_2^2 + 2\sigma^2 \tr\left( \biX^T\biX\left( \biX^T\biX + \lambda I_{p+1} \right)^{-1} \right)\\
+&= -n\sigma^2 + \| \biy - \hat{\mu}_\lambda(\biy) \|_2^2 + 2\sigma^2 \tr\left( H\left( H + \lambda I_{p+1} \right)^{-1} \right),
+\]
+where the last line is by defining $H\defas\biX^T\biX$. We can optimize $\lambda$ over $\hat{R}$ using autodiff (log-transform $\lambda$ so that it is nonnegative). 

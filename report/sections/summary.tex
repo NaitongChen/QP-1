@@ -37,7 +37,7 @@ is an unbiased estimate for $R$.
 
 \textbf{Extending SURE to regularized estimators}:
 
-Now suppose $\hat{\mu}_\lambda$ depends on $\lambda\in\Lambda$, which controls the degree of regularization to our estimator, and assume $\sigma$ is known, we can find the optimal $\lambda$, denoted $\hat{\lambda}$ by
+Now suppose $\hat{\mu}_\lambda$ depends on $\lambda\in\Lambda$, which controls the degree of regularization to our estimator (typically $\Lambda = \reals_{>0}$), and assume $\sigma$ is known, we can find the optimal $\lambda$, denoted $\hat{\lambda}$ by
 \[
 \hat{\lambda} = \argmin_{\sigma\in\Sigma} \| y - \hat{\mu}_\lambda(y) \|_2^2 + 2\sigma^2 \sum_{i=1}^n \frac{\partial \hat{\mu}_{\lambda, i}}{\partial y_i}(y).
 \]
