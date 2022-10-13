@@ -2,13 +2,42 @@
 
 % Mini-proposals section
 
+% each mini-proposal gets its own subsection
 \section{Mini-proposals}
 
+\subsection{Proposal 1: Efficient cross validation via data subsampling} % enter your proposal title
+In the large-data regime where the number of observations is much greater than the number of predictors ($n\gg p$), solving the OLS problem and/or ridge regression can be computationally expensive. Especially during hyperparameter turning in ridge regression, where we'd solve the same problem with a subset of the data $k$ times if we were using a $k$-fold cross validation procedure. 
+
+If we were able to select a sparse, weighted subsample of the data that still contains information about the full dataset, we can greatly reduce the computational cost of this procedure. However, since both the $\beta$ and $L2$ penalty term $\lambda$ are unknown prior to solving the regression problem, we need to ensure our selected subsample gives us a good approximation of the full dataset across a wide range of $\beta$ and $\lambda$ values, or at least for $\beta$ and $\lambda$ values that we will likely get.
+
+This notion of a good approximation over the high density region of some distribution aligns well with the Bayesian point of view. We can therefore leverage the idea of Bayesian coresets to construct our sparse, weighted subsample.
+\[
+\text{Insert description of Bayesian coresets.}
+\]
+This approach makes intuitive sense as we can associate the ridge regression estimate to the MAP estimate of the coefficients with a Gaussian prior (whose variance is speficied by $\lambda$). Note that the Gaussian prior still fixes a $\lambda$ value. To make our constructed subsample a good approximation over various $\lambda$ values, we can introduce a prior on the variance of the ridge regression coefficients. 
+
+Depending on the choice of the prior on $\lambda$, we could potentially have closed form solutions of the posterior distribution over the ridge regression coefficients. This then could enable us to efficiently build a sparse, weighted subsample that well approximates the full dataset over a wide range of $\beta$ and $\lambda$ values.
+\[
+\text{Insert weighted linear regression (with L2 regularization) closed-form solutions.}
+\]
+With the above closed-form solutions to the weighted ridge regression problem, we can now perform cross validation either through the regular approach or the SURE approach discussed in the following section of the report, with much lower computational costs.
+
 % each mini-proposal gets its own subsection
-\subsection{Proposal 1: MY PROPOSAL TITLE} % enter your proposal title
+\pagebreak
+\subsection{Proposal 2: Using SURE to automate cross validation for principal component regression with L1 regularization} % enter your proposal title
+Given the example of using SURE to tune the L2 penalty term through autodiff, it is natural to try and extend this idea to LASSO regression. However, there are a few problems to consider: 1) LASSO regression only has closed form solutions under specific cases (univariate or orthogonal data matrix), which is required for the use of SURE; 2) even when there is a closed-form solution, the solution function is not smooth and hence not differentiable at the non-smooth part. 
 
-
-% each mini-proposal gets its own subsection
-\subsection{Proposal 2: MY OTHER PROPOSAL TITLE} % enter your proposal title
-
+To address the first problem, we can consider principal compoent regression (PCR) where we perform regression on the principal components resulted from a principal component analysis (PCA). The principal components form a orthogonal basis and so we can obtain a closed-form solution for LASSO regression if we were to treat the principal components as our data.
+\[
+\text{Insert principal component formulation.}
+\]
+By treating the above as our data, we can write the LASSO regression solution as follows.
+\[
+\text{Insert LASSO regression solution with orthogonal data matrix.}
+\]
+Now that we have obtained a closed-form solution to the principal component transformed LASSO problem, we can write the SURE as
+\[
+\text{Insert SURE with PCR + LASSO.}
+\]
+The last term can be replaced with the number of non-zero coefficients (\citet{tibshirani2015stein}), and we can use a subgradient method to solve for the optimal $\lambda$.
 % ...
