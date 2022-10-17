@@ -6,38 +6,94 @@
 
 % In this paper I cite~\citep{james:2005}. But \citet{james:2005} cites me.
 
-\citet{tibshirani2015stein}
+%\citet{tibshirani2015stein}
+%
+%\textbf{Stein's Lemma}:
+%
+%\begin{itemize}
+%\item (univariate) Let $Z\sim\distNorm(0,1)$. Let $f:\reals\to\reals$ be absolutely continuous, with derivative $f'$ (and assume that $\EE\left[ \abs{f'(Z)} \right] < \infty$). Then $\EE\left[ Zf(Z) \right] = \EE\left[ f'(Z) \right]$.
+%\item (extesion) Let $X\sim\distNorm(\mu, \sigma^2)$. Then $\frac{1}{\sigma^2}\EE\left[ (x-\mu)f(x) \right] = \EE\left[ f'(X) \right]$.
+%\item (multivariate) Let $X\sim\distNorm(\mu, \sigma^2I)$, where $\mu\in\reals^n$ and $\sigma^2I\in\reals^{n\times n}$. Let $f: \reals^n\to\reals$ be a function such that, for each $i=1,\cdots,n$ and almost every $x_{-i}\in\reals^{n-1}$, $f(\cdot, x_{-i}):\reals\to\reals$ is absolutely continuous (and assume $\|f(X)\|_2 < \infty$). Then $\frac{1}{\sigma^2}\EE\left[ (X-\mu)f(X) \right] = \EE\left[ \nabla f(X) \right]$.
+%\item (extension) Let $f=(f_1,\cdots,f_n)$, then
+%\[
+%&\frac{1}{\sigma^2}\EE\left[ (X-\mu)f_i(X) \right] = \EE\left[ \nabla f_i(X)\right] \\
+%\implies &\frac{1}{\sigma^2}\sum_{i=1}^n\cov(X_i, f_i(X)) = \frac{1}{\sigma^2}\sum_{i=1}^n \EE\left[ (X_i - \mu_i)f_i(X) \right] = \EE\left[ \sum_{i=1}^n \frac{\partial f_i}{\partial X_i}(X) \right].
+%\]
+%\end{itemize}
+%
+%\textbf{Stein's Unbiased Risk Estimate (SURE)}:
+%
+%Given samples $y\sim\distNorm\left( \mu, \sigma^2I \right)$, and a function $\hat{\mu}: \reals^n \to \reals^n$, $\hat{\mu}$ is a fitting procedure that, from $y$, provides an estimate $\hat{\mu}(y)$ of the underlying (unknown) mean $\mu$. Then
+%\[
+%R &= \EE_{y}\| \mu - \hat{\mu}(y) \|^2\\
+% &= -n\sigma^2 + \EE \| y - \hat{\mu} \|_2^2 + 2\sigma^2 \text{df}(\hat{\mu})\\
+% &= -n\sigma^2 + \EE \| y - \hat{\mu} \|_2^2 + 2\sum_{i=1}^n \cov\left( y_i, \hat{\mu}_i \right),
+%\]
+%where $\text{df}(\hat{\mu}) = \frac{1}{\sigma^2}\sum_{i=1}^n \cov(y_i, \hat{\mu}_i)$. And
+%\[
+%\hat{R} = -n\sigma^2 + \| y - \hat{\mu}(y) \|_2^2 + 2\sigma^2 \sum_{i=1}^n \frac{\partial \hat{\mu}_i}{\partial y_i}(y)
+%\]
+%is an unbiased estimate for $R$.
+%
+%\textbf{Extending SURE to regularized estimators}:
+%
+%Now suppose $\hat{\mu}_\lambda$ depends on $\lambda\in\Lambda$, which controls the degree of regularization to our estimator (typically $\Lambda = \reals_{>0}$), and assume $\sigma$ is known, we can find the optimal $\lambda$, denoted $\hat{\lambda}$ by
+%\[
+%\hat{\lambda} = \argmin_{\sigma\in\Sigma} \| y - \hat{\mu}_\lambda(y) \|_2^2 + 2\sigma^2 \sum_{i=1}^n \frac{\partial \hat{\mu}_{\lambda, i}}{\partial y_i}(y).
+%\]
 
-\textbf{Stein's Lemma}:
-
-\begin{itemize}
-\item (univariate) Let $Z\sim\distNorm(0,1)$. Let $f:\reals\to\reals$ be absolutely continuous, with derivative $f'$ (and assume that $\EE\left[ \abs{f'(Z)} \right] < \infty$). Then $\EE\left[ Zf(Z) \right] = \EE\left[ f'(Z) \right]$.
-\item (extesion) Let $X\sim\distNorm(\mu, \sigma^2)$. Then $\frac{1}{\sigma^2}\EE\left[ (x-\mu)f(x) \right] = \EE\left[ f'(X) \right]$.
-\item (multivariate) Let $X\sim\distNorm(\mu, \sigma^2I)$, where $\mu\in\reals^n$ and $\sigma^2I\in\reals^{n\times n}$. Let $f: \reals^n\to\reals$ be a function such that, for each $i=1,\cdots,n$ and almost every $x_{-i}\in\reals^{n-1}$, $f(\cdot, x_{-i}):\reals\to\reals$ is absolutely continuous (and assume $\|f(X)\|_2 < \infty$). Then $\frac{1}{\sigma^2}\EE\left[ (X-\mu)f(X) \right] = \EE\left[ \nabla f(X) \right]$.
-\item (extension) Let $f=(f_1,\cdots,f_n)$, then
+Parameter estimation lies in the heart of statistical inference, and the customary maximum likelihood estimator (MLE) may not be optimal in terms of the mean-squared error (MSE). Consider the setting where for some $n\in\nats$, we have an observation $x\in\reals^n$ that is a realization of $X \distas \distNorm\left(\mu, I\right)$. To estimate $\mu\in\reals^d$, maximum likelihood estimation would yield $\hat{\mu}(x) = x$. In \citet{stein1956variate}, a perhaps surprising result shows that when $n\geq3$, there exists some other estimator $\tilde{\mu}$ such that
 \[
-&\frac{1}{\sigma^2}\EE\left[ (X-\mu)f_i(X) \right] = \EE\left[ \nabla f_i(X)\right] \\
-\implies &\frac{1}{\sigma^2}\sum_{i=1}^n\cov(X_i, f_i(X)) = \frac{1}{\sigma^2}\sum_{i=1}^n \EE\left[ (X_i - \mu_i)f_i(X) \right] = \EE\left[ \sum_{i=1}^n \frac{\partial f_i}{\partial X_i}(X) \right].
+\EE\| \tilde{\mu}(X) - \mu \|^2 < \EE\| \hat{\mu}(X) - \mu \|^2.
 \]
-\end{itemize}
-
-\textbf{Stein's Unbiased Risk Estimate (SURE)}:
-
-Given samples $y\sim\distNorm\left( \mu, \sigma^2I \right)$, and a function $\hat{\mu}: \reals^n \to \reals^n$, $\hat{\mu}$ is a fitting procedure that, from $y$, provides an estimate $\hat{\mu}(y)$ of the underlying (unknown) mean $\mu$. Then
+In fact, there are many other cases where the maximum likelihood estimator is not optimal under the MSE, a widely used metric for evaluating the quality of an estimator thanks to its mathematical tractability \citep{berger1975minimax,degroot2005optimal}. In a follow-up work by Charles Stein, he developed what is known as Stein's unbiased risk estimate (SURE), which provides an unbiased estimate of the MSE of an arbitrary estimator for the mean of a normally distributed random variable of the form $\distNorm\left(\mu, \sigma^2I\right)$. In what follows, we present a version of this result as outlined in \citet{tibshirani2015stein}.
+\blem\label{lem:slemma}
+Let $X\sim\distNorm(\mu, \sigma^2I)$, where $\mu\in\reals^n$ and $\sigma>0$. Let $f: \reals^n\to\reals$ be a function, and let $f(\cdot, x_{-i})$ refer to $f$ as a function of its $i^{\text{th}}$ component $x_i$ with all other components $x_{-i}$ held fixed. Suppose for each $i=1,\cdots,n$ and almost every $x_{-i}\in\reals^{n-1}$, $f(\cdot, x_{-i}):\reals\to\reals$ is absolutely continuous. If we further assume $\EE\|f(X)\|_2 < \infty$,  then 
 \[
-R &= \EE_{y}\| \mu - \hat{\mu}(y) \|^2\\
- &= -n\sigma^2 + \EE \| y - \hat{\mu} \|_2^2 + 2\sigma^2 \text{df}(\hat{\mu})\\
- &= -n\sigma^2 + \EE \| y - \hat{\mu} \|_2^2 + 2\sum_{i=1}^n \cov\left( y_i, \hat{\mu}_i \right),
+\frac{1}{\sigma^2}\EE\left[ (X-\mu)f(X) \right] = \EE\left[ \nabla f(X) \right].
 \]
-where $\text{df}(\hat{\mu}) = \frac{1}{\sigma^2}\sum_{i=1}^n \cov(y_i, \hat{\mu}_i)$. And
+\elem
+$ $\newline
+By decomposing $f$ by its coordinate functions $f = (f_1,\dots,f_n)$, we have that for each $i=1,\dots,n$,
 \[
-\hat{R} = -n\sigma^2 + \| y - \hat{\mu}(y) \|_2^2 + 2\sigma^2 \sum_{i=1}^n \frac{\partial \hat{\mu}_i}{\partial y_i}(y)
+\frac{1}{\sigma^2}\EE\left[ (X-\mu)f_i(X) \right] = \EE\left[ \nabla f_i(X) \right].
 \]
-is an unbiased estimate for $R$.
-
-\textbf{Extending SURE to regularized estimators}:
-
-Now suppose $\hat{\mu}_\lambda$ depends on $\lambda\in\Lambda$, which controls the degree of regularization to our estimator (typically $\Lambda = \reals_{>0}$), and assume $\sigma$ is known, we can find the optimal $\lambda$, denoted $\hat{\lambda}$ by
+Then summing over all $n$ components yields
 \[
-\hat{\lambda} = \argmin_{\sigma\in\Sigma} \| y - \hat{\mu}_\lambda(y) \|_2^2 + 2\sigma^2 \sum_{i=1}^n \frac{\partial \hat{\mu}_{\lambda, i}}{\partial y_i}(y).
+\frac{1}{\sigma^2}\sum_{i=1}^n\cov(X_i, f_i(X)) = \frac{1}{\sigma^2}\sum_{i=1}^n \EE\left[ (X_i - \mu_i)f_i(X) \right] = \EE\left[ \sum_{i=1}^n \frac{\partial f_i}{\partial X_i}(X) \right].
 \]
+Now suppose $\hmu:\reals^n\to\reals^n$ is an arbitrary estimator that satisfies the assumptions laid out in \cref{lem:slemma}, it can be shown that
+\[
+R = \EE\| \mu - \hmu(X) \|^2 = -n\sigma^2 + \EE \| X - \hat{\mu}(X) \|^2 + 2\sum_{i=1}^n \cov\left( X_i, \hat{\mu}_i(X) \right),
+\]
+which finally leads to
+\[
+\hat{R} = -n\sigma^2 + \| X - \hat{\mu}(X) \|^2 + 2\sigma^2\sum_{i=1}^n \frac{\partial \hmu_i}{\partial X_i}(X)
+\]
+as an unbiased estimator for the MSE of $\hat{\mu}$.
+
+$ $\newline
+It is worth noting that the SURE can be employed on a very general class of estimators and that it removes the explicit dependence on the unknown $\mu$. These desirable features have enabled SURE to fuel the development of many estimators that are more superior in MSE than the MLE for parameter estimation problems under the normal distribution and beyond. For instance, under the SURE framework, the James-Stein estimator \citep{james1992estimation} can be shown to be a strictly better estimator in terms of MSE for normally distributed vectors with unit covariance. \cref{lem:slemma} has also been extended to the exponential family, where subsequent estimators outperforming the MLE in terms of MSE have been developed for parameter estimation problems when the underlying distribution is Gamma, Poisson, ect. \citep{hudson1978natural,peng1975simultaneous,tsui1978simultaneous}.
+
+$ $\newline
+The SURE has also been found in a wide range of applications beyond merely parameter estimation. As an example, it can be used to perform model selection for ridge regression. In a typical linear regression setting, we are given a set of $n$ observations such that
+\[
+y_i = x_i^T\beta + \eps_i,
+\]
+where $\beta\in\reals^p$ for some $p\in\nats$ and for all $i=1,\dots,n$, $x_i\in\reals^p$, $\eps_i\distiid \distNorm(0,\sigma^2)$ for some $\sigma>0$. We can equivalently write that
+\[
+Y = \begin{bmatrix} y_1 & \cdots & y_n \end{bmatrix}^T \distas \distNorm\left(X\beta, \sigma^2I \right), \quad \text{where } X = \begin{bmatrix} x_1 & \cdots & x_n \end{bmatrix}^T.
+\]
+Given a regularization parameter $\lambda\geq0$, we can set
+\[
+\hmu_\lambda(Y) = \left( X^TX + \lambda I \right)^{-1}X^TY,
+\]
+the ridge estimator for $\beta$, and subsequently the unbiased risk estimate for $\hmu_\lambda$ takes the form
+\[
+\hat{R} = -n\sigma^2 + \| Y - \hat{\mu}_\lambda(Y) \|^2 + 2\sigma^2\sum_{i=1}^n \frac{\partial \hmu_{\lambda,i}}{\partial y_i}(Y).
+\]
+Note that the second term encourages the estimates to be close to the observations, the last term encourages the estimator to not change much under perturbations of the observations, thus creating a bias-variance trade-off. As a result, selecting $\lambda\geq0$ by minimizing the SURE can be seen as a model selection procedure that is similar in spirit to cross-validation. This $\lambda$ selection procedure was first proposed in \citet{10.2307/1267380}, and the corresponding risk estimate was later shown to be asymptotically optimal as the numbser of observations approaches infinity \citep{li1986asymptotic}.
+
+$ $\newline
+
+
