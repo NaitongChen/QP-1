@@ -90,10 +90,31 @@ Given a regularization parameter $\lambda\geq0$, we can set
 \]
 the ridge estimator for $\beta$, and subsequently the unbiased risk estimate for $\hmu_\lambda$ takes the form
 \[
-\hat{R} = -n\sigma^2 + \| Y - \hat{\mu}_\lambda(Y) \|^2 + 2\sigma^2\sum_{i=1}^n \frac{\partial \hmu_{\lambda,i}}{\partial y_i}(Y).
+\hat{R}(\lambda) = -n\sigma^2 + \| Y - \hat{\mu}_\lambda(Y) \|^2 + 2\sigma^2\sum_{i=1}^n \frac{\partial \hmu_{\lambda,i}}{\partial y_i}(Y).
 \]
-Note that the second term encourages the estimates to be close to the observations, the last term encourages the estimator to not change much under perturbations of the observations, thus creating a bias-variance trade-off. As a result, selecting $\lambda\geq0$ by minimizing the SURE can be seen as a model selection procedure that is similar in spirit to cross-validation. This $\lambda$ selection procedure was first proposed in \citet{10.2307/1267380}, and the corresponding risk estimate was later shown to be asymptotically optimal as the numbser of observations approaches infinity \citep{li1986asymptotic}.
+Note that the second term encourages the estimates to be close to the observations, and the last term encourages the estimator to not change much under perturbations of the observations, thus creating a bias-variance trade-off. As a result, selecting $\lambda\geq0$ by minimizing the SURE can be seen as a model selection procedure that is similar in spirit to cross-validation. This $\lambda$ selection procedure was first proposed in \citet{10.2307/1267380}, and the corresponding risk estimate was later shown in \citet{li1986asymptotic} to be asymptotically optimal as the numbser of observations approaches infinity. Namely, denote the selected regularization parameter $\lambda^\star$, we have that
+\[
+\frac{\hR\left(\lambda^\star\right)}{\inf_{\lambda\geq0}R(\lambda)} \convp 1.
+\]
+$ $\newline
+SURE has also been widely used in the application of image denoising, where it is most commonly used directly as the objective function under which we find the optimal parameter setting using a set of training images (noisy and noise-less). Typically these parameters control the threshold used to decide whether the corresponding signal should be removed. While SURE directly applies when the noise is assumed to be normally distributed, there have also been methods developed to handle other distributions of noise \citep{donoho1995adapting,luisier2010image,panisetti2014unbiased}. Using a slightly different approach, the SURE framework has also been shown in \citet{metzler2018unsupervised} to be particularly useful in the setting where training images are not available or only noisy images are available without their noise-less counterparts. This is indeed a very common setting in practice: in medical imaging, microscopy, and
+astronomy, noise-less ground truth data are rarely available. Here we discuss this work in more detail. Suppose that for an unobserved noise-less iamge $x\in\reals^n$, we observe a noisy version of the image $y$ such that
+\[
+y = x + w, \quad w\distas\distNorm\left(0,\sigma^2I\right).
+\]
+Our goal is to recover the noise-less image $x$ by transforming the noisy observation $y$ through some image denoiser $f_\theta:\reals^n\to\reals^n$ parameterized by $\theta$. Under the framework of SURE, we can reconstruct the image using the optimal denoiser function obtained by minimizing the unbiased risk estimate
+\[
+\hR(\theta) = - \sigma^2 + \|y - f_\theta(y)\|^2 + 2\sigma^2\sum_{i=1}^n \frac{\partial f_{\theta,i}}{\partial y_i}(y) \approx R(\theta) = \EE_w \| x - f_\theta(y) \|^2.
+\]
+The key observations here is that, under the framework of SURE, we no longer require the noise-less ground truth image to obtain a reconstructed image that minimizes the MSE between itself and the true image. Through the lense of bias-variance trade-off, this above formulation also naturally balances between obtaining an approximation close to the observation and overfitting to the noise in the observed image. Therefore, given any noisy image, we can obtain a reconstructed image that minimizes the MSE under normally distributed noise. Furthermore, if we were given a training set of $K$ noisy observations $(y_k)_{k=1}^K$, we can train a denoiser that generalizes to the class of images contaminated with normally distributed noise by minimizing the sum of these individual risk estimates.
 
 $ $\newline
+While SURE acts as a natural device for image deblurring in the absense of ground truth noise-less training images, there is one major challenge of this approach. Namely, it is difficult to compute the gradient of $f_\theta$ with respect to $y$, often referred to as the divergence. Many of the modern-day image denoisers are neural networks with extremely complicated structure that makes computing its gradient by hand difficult \citep{zhang2017beyond,yang2017high,dong2014learning}. However, to optimize the unbiased risk estimate over $\theta$ using automatic differentiation as proposed in \citet{metzler2018unsupervised}, direct computation or approximation of the gradient of $f_\theta$ with respect to $y$ is often required. This is because nested automatic differentiation is not typically supported in existing packages. This issue is addressed by resorting to finite-difference type approximation of the divergence term introduced in MC-SURE \citep{ramani2008monte}. However, this method still requires the user to specify the spacing parameter $\eps$, and the effect of $\eps$ on the resulting image denoisers remains unexplored.
+
+
+
+
+
+
 
 
