@@ -54,22 +54,57 @@ It now remains to find the optimal $\lambda$ and subsequently the set of PCs wit
 
 \pagebreak
 
-\subsection{Proposal 2: Efficient cross validation via data subsampling} % enter your proposal title
-In the large-data regime where the number of observations is much greater than the number of predictors ($n\gg p$), solving the OLS problem and/or ridge regression can be computationally expensive. Especially during hyperparameter turning in ridge regression, where we'd solve the same problem with a subset of the data $k$ times if we were using a $k$-fold cross validation procedure. 
+\subsection{Proposal 2: Efficient cross-validation for ridge regression via data subsampling} % enter your proposal title
 
-If we were able to select a sparse, weighted subsample of the data that still contains information about the full dataset, we can greatly reduce the computational cost of this procedure. However, since both the $\beta$ and $L2$ penalty term $\lambda$ are unknown prior to solving the regression problem, we need to ensure our selected subsample gives us a good approximation of the full dataset across a wide range of $\beta$ and $\lambda$ values, or at least for $\beta$ and $\lambda$ values that we will likely get.
-
-This notion of a good approximation over the high density region of some distribution aligns well with the Bayesian point of view. We can therefore leverage the idea of Bayesian coresets to construct our sparse, weighted subsample.
+Following the notation from the previous sections, given a data matrix $X\in\reals^{n\times d}$, a response vector $y\in\reals^n$, and a regularization parameter $\lambda\geq0$, the ridge estimator of the regression coefficients takes the form
 \[
-\text{Insert description of Bayesian coresets.}
+\hbeta_{\text{ridge}, \lambda}(y) = \left( X^TX + \lambda I \right)^{-1}X^Ty,
 \]
-This approach makes intuitive sense as we can associate the ridge regression estimate to the MAP estimate of the coefficients with a Gaussian prior (whose variance is speficied by $\lambda$). Note that the Gaussian prior still fixes a $\lambda$ value. To make our constructed subsample a good approximation over various $\lambda$ values, we can introduce a prior on the variance of the ridge regression coefficients. 
+which has a computational complexity of $O(np^2)$. In the context of model selection by minimizng the SURE, one way to obtain the optimal regularization parameter is to run the gradient descent algorithm with respect to $\lambda$ with the SURE being the objective function. This requires, at each iteration of the optimization, evaluating the derivative of SURE with respect to $\lambda$, which involves the term $\hbeta_{\text{ridge}, \lambda}(y)$. Therefore, for $K$ steps of gradient descent, the computational complexity is at least in the order of $O(Knp^2)$. In the large-data regime where there are many observations, the cost of this procedure grows linearly with the number of optimization iterations, which can potentially be extremely expensive. Similarly, in the perhaps more commonly used $K$-fold cross-validation procedure, we need to compute $\hbeta_{\text{ridge}, \lambda}$ for each of the $K$ folds of the data. Then if $K$ is also large (e.g. leave-one-out cross-validation), the computational cost could also be expensive.
 
-Depending on the choice of the prior on $\lambda$, we could potentially have closed form solutions of the posterior distribution over the ridge regression coefficients. This then could enable us to efficiently build a sparse, weighted subsample that well approximates the full dataset over a wide range of $\beta$ and $\lambda$ values.
+$ $\newline
+To reduce the computational complexity of such procedures, one approach is to use a representative subsample of size $m$ ($m\ll n$) in place of the full datase to perform model selection. If the subsample is indeed representative of the full dataset, we can greatly reduce the computational cost without greatly hindering the quality of the selected model. Existing approaches for subsample selection include leverage score based and volume sampling based methods. More specifically, one can either use the leverage scores to form an importance distribution from which we sample of the observations, or use the idea of volume sampling to select a subsample that minimizes the Frobenius norm between the original data matrix and the projection onto the space spanned by the selected subset \citep{ma2014statistical,avron2010blendenpik}.
+
+$ $\newline
+It is worth noting that these methods mentioned above do not take into consideration the subsequet model selection step while constructing the subset. While there has been some work that concerns the generalization error of the ridge estimator based on a subset of the data, their result only holds for $\lambda$ values that are bounded by some function of the true regression coefficients, which are not known a priori \citep{derezinski2017subsampling}.
+
+$ $\newline
+In the context of model selection for ridge regression, ideally we would like a subsample of the data that well approximates the original dataset for a wide range of $\lambda$ values, or at least the likely $\lambda$ values given the full dataset. From a probabilistic point of view, we know that the ridge estimator is the MAP estimator with Gaussian likelihood for the data and Gaussian prior on the regression parameters (with the variance of each dimension being $\lambda^{-1}$):
 \[
-\text{Insert weighted linear regression (with L2 regularization) closed-form solutions.}
+\hbeta_{\text{ridge},\lambda} = \argmax_{\beta} -\frac{1}{2}\sum_{i=1}^n (x_i^T\beta - y_i)^2 - \frac{\lambda}{2}\|\beta\|^2.
 \]
-With the above closed-form solutions to the weighted ridge regression problem, we can now perform cross validation either through the regular approach or the SURE approach discussed in the following section of the report, with much lower computational costs.
+From a Bayesian perspective, the Gaussian likelihood on the data and Gaussian prior on the regression parameters together give us a posterior distribution of the regression parameters upon observing the data. Note that the above formulation is still specific to a particular $\lambda$ value. Upon imposing another prior distribution over $\lambda$, we can obtain a posterior distribution $\pi$ over $\lambda$ and $\beta$. If we can build a sparse and potentially weighted subset (of size $m$) of the full dataset that has low error across the high density regions of $\pi$, it is possible that we can obtain good generalization properties of the ridge estimator resulted from either the SURE or cross-validation model selection procedure.
+
+$ $\newline
+One way to formulate this idea is as follows. Given an approximation of the posterior distribution over $\lambda$ and $\beta$, which we denote $\hpi$, we would like to find a set of weights $w \in\reals_+^n$, $\|w\|_0 \leq m$, that minimizes
+\[
+\left\| \sum_{i=1}^n \mcL_i - \sum_{i=1}^n w_i \mcL_i \right\|_{\hpi, 2},
+\]
+where $\mcL_i$ is the Gaussian log likelihood for the $i^\text{th}$ observation, and $\|\cdot\|_{\hpi, 2}$ denotes a weighted $L^2$ norm on the log likelihoods. It turns out that this is precisely the objective for one of the Bayesian coreset construction algorithms, where we can construct a sparse, weighted subsample of the original dataset \citep{campbell2019automated}. Since we know that there exists closed-form solutions for weighted least squares, we can use this Bayesian coreset to construct our ridge regression models and to subsequently perform model selection either through SURE or cross-validation \citep{strutz2011data}.
+
+$ $\newline
+In \citet{campbell2019automated}, a bound on the above objective using the set of weights obtained through random projection \citep{rahimi2007random} along with samples from $\hpi$ is provided. In particular, this bound is funciton of $m$ that decreases as $m$ increases. Given the connection between the ridge estimator and its underlying posterior distribution, we should expect to see good generalization properties of the selected model constructed using Bayesian coresets.
+
+$ $\newline
+In order to construct Bayesian coresets through the above formulation, we need to be able to take samples from $\hpi$. We note that ridge regression corresponds to a posterior distribution with a Gaussian likelihood on the data and a Gaussian prior on the regression coefficients. Therefore, with an appropriate choice of the prior on $\lambda$ (e.g. Gaussian), it should not be difficult to obtain a $\hpi$ that well approximates the true posterior. One option to construct $\hpi$ is to use the Laplace approximaiton \citep{bishop2006pattern}. It remains now to explore the effect that different choices of the prior on $\lambda$ has on the quality of the selected ridge regression model, either through SURE or cross-validation.
+
+%In the large-data regime where the number of observations is much greater than the number of predictors ($n\gg p$), solving the OLS problem and/or ridge regression can be computationally expensive. Especially during hyperparameter turning in ridge regression, where we'd solve the same problem with a subset of the data $k$ times if we were using a $k$-fold cross validation procedure. 
+%
+%If we were able to select a sparse, weighted subsample of the data that still contains information about the full dataset, we can greatly reduce the computational cost of this procedure. However, since both the $\beta$ and $L2$ penalty term $\lambda$ are unknown prior to solving the regression problem, we need to ensure our selected subsample gives us a good approximation of the full dataset across a wide range of $\beta$ and $\lambda$ values, or at least for $\beta$ and $\lambda$ values that we will likely get.
+%
+%This notion of a good approximation over the high density region of some distribution aligns well with the Bayesian point of view. We can therefore leverage the idea of Bayesian coresets to construct our sparse, weighted subsample.
+%\[
+%\text{Insert description of Bayesian coresets.}
+%\]
+%This approach makes intuitive sense as we can associate the ridge regression estimate to the MAP estimate of the coefficients with a Gaussian prior (whose variance is speficied by $\lambda$). Note that the Gaussian prior still fixes a $\lambda$ value. To make our constructed subsample a good approximation over various $\lambda$ values, we can introduce a prior on the variance of the ridge regression coefficients. 
+%
+%Depending on the choice of the prior on $\lambda$, we could potentially have closed form solutions of the posterior distribution over the ridge regression coefficients. This then could enable us to efficiently build a sparse, weighted subsample that well approximates the full dataset over a wide range of $\beta$ and $\lambda$ values.
+%\[
+%\text{Insert weighted linear regression (with L2 regularization) closed-form solutions.}
+%\]
+%With the above closed-form solutions to the weighted ridge regression problem, we can now perform cross validation either through the regular approach or the SURE approach discussed in the following section of the report, with much lower computational costs.
+
+
 
 % each mini-proposal gets its own subsection
 % ...

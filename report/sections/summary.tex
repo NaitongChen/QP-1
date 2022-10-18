@@ -82,15 +82,15 @@ y_i = x_i^T\beta + \eps_i,
 \]
 where $\beta\in\reals^p$ for some $p\in\nats$ and for all $i=1,\dots,n$, $x_i\in\reals^p$, $\eps_i\distiid \distNorm(0,\sigma^2)$ for some $\sigma>0$. We can equivalently write that
 \[
-Y = \begin{bmatrix} y_1 & \cdots & y_n \end{bmatrix}^T \distas \distNorm\left(X\beta, \sigma^2I \right), \quad \text{where } X = \begin{bmatrix} x_1 & \cdots & x_n \end{bmatrix}^T.
+y = \begin{bmatrix} y_1 & \cdots & y_n \end{bmatrix}^T \distas \distNorm\left(X\beta, \sigma^2I \right), \quad \text{where } X = \begin{bmatrix} x_1 & \cdots & x_n \end{bmatrix}^T.
 \]
 Given a regularization parameter $\lambda\geq0$, we can set
 \[
-\hmu_\lambda(Y) = \left( X^TX + \lambda I \right)^{-1}X^TY,
+\hmu_\lambda(y) = \hbeta_{\text{ridge}, \lambda} = \left( X^TX + \lambda I \right)^{-1}X^Ty,
 \]
 the ridge estimator for $\beta$, and subsequently the unbiased risk estimate for $\hmu_\lambda$ takes the form
 \[
-\hat{R}(\lambda) = -n\sigma^2 + \| Y - \hat{\mu}_\lambda(Y) \|^2 + 2\sigma^2\sum_{i=1}^n \frac{\partial \hmu_{\lambda,i}}{\partial y_i}(Y).
+\hat{R}(\lambda) = -n\sigma^2 + \| y - \hat{\mu}_\lambda(y) \|^2 + 2\sigma^2\sum_{i=1}^n \frac{\partial \hmu_{\lambda,i}}{\partial y_i}(y).
 \]
 Note that the second term encourages the estimates to be close to the observations, and the last term encourages the estimator to not change much under perturbations of the observations, thus creating a bias-variance trade-off. As a result, selecting $\lambda\geq0$ by minimizing the SURE can be seen as a model selection procedure that is similar in spirit to cross-validation. This $\lambda$ selection procedure was first proposed in \citet{10.2307/1267380}, and the corresponding risk estimate was later shown in \citet{li1986asymptotic} to be asymptotically optimal as the numbser of observations approaches infinity. Namely, denote the selected regularization parameter $\lambda^\star$, we have that
 \[
