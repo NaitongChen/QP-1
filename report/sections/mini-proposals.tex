@@ -5,22 +5,53 @@
 % each mini-proposal gets its own subsection
 \section{Mini-proposals}
 
-\subsection{Proposal 1: Using SURE to automate cross validation for principal component regression with L1 regularization} % enter your proposal title
-Given the example of using SURE to tune the L2 penalty term through autodiff, it is natural to try and extend this idea to LASSO regression. However, there are a few problems to consider: 1) LASSO regression only has closed form solutions under specific cases (univariate or orthogonal data matrix), which is required for the use of SURE; 2) even when there is a closed-form solution, the solution function is not smooth and hence not differentiable at the non-smooth part. 
+%Given the example of using SURE to tune the L2 penalty term through autodiff, it is natural to try and extend this idea to LASSO regression. However, there are a few problems to consider: 1) LASSO regression only has closed form solutions under specific cases (univariate or orthogonal data matrix), which is required for the use of SURE; 2) even when there is a closed-form solution, the solution function is not smooth and hence not differentiable at the non-smooth part. 
+%
+%To address the first problem, we can consider principal compoent regression (PCR) where we perform regression on the principal components resulted from a principal component analysis (PCA). The principal components form a orthogonal basis and so we can obtain a closed-form solution for LASSO regression if we were to treat the principal components as our data.
+%\[
+%\text{Insert principal component formulation.}
+%\]
+%By treating the above as our data, we can write the LASSO regression solution as follows.
+%\[
+%\text{Insert LASSO regression solution with orthogonal data matrix.}
+%\]
+%Now that we have obtained a closed-form solution to the principal component transformed LASSO problem, we can write the SURE as
+%\[
+%\text{Insert SURE with PCR + LASSO.}
+%\]
+%The last term can be replaced with the number of non-zero coefficients (\citet{tibshirani2015stein}), and we can use a subgradient method to solve for the optimal $\lambda$.
 
-To address the first problem, we can consider principal compoent regression (PCR) where we perform regression on the principal components resulted from a principal component analysis (PCA). The principal components form a orthogonal basis and so we can obtain a closed-form solution for LASSO regression if we were to treat the principal components as our data.
+\subsection{Proposal 1: Using SURE to automate cross validation for principal component regression with L1 regularization} % enter your proposal title
+
+Principal component regression (PCR), a regression method based on principal components (PCs) obtained from principal component analyses (PCA), is commonly used in genomics applications among others. This is because, rather than the effect of individual gene expressions, practitioners are typically more interested in studying the effect of groups of genes, which may describe more complicated processes \citep{ding2022sufficient}. 
+
+$ $\newline
+The general procedure of PCR is typically as follows. Suppose we are given a centred data matrix $X \in \reals^{n\times p}$ and corresponding responses $y\in\reals^n$ consisting of $n$ observations each with $p$ predictors. Let $X = U\Sigma V^T$ denote the singular value decomposition of the data matrix $X$, then $W = XV$ denotes the set of all PCs, a set of transformed feature vectors that form an orthonormal basis, ordered by the amount of variance from the data that each PC explains. One can then perform linear regression on the PCs against the response $y$. Because the PCs are orthogonal to each other, this approach usually leads to better numerical stability than, for example, ordinary least squares. 
+
+$ $\newline
+When the number of predictors is large, a common practice is to perform PCR using only the top $k$ PCs ($k\ll p$), i.e., the PCs that explain the most variance present in the data \citep{cera2019genes,harel2019predicting}. However, it is important to note that the PCs are fit without knowledge of the response variable, and so the idea that performing PRC using the first $k$ PCs will lead to good a good fit of the data is merely a heuristic. In fact, \citet{jolliffe1982note} provides a number of real examples where performing PCR using the first few PCs that explain the most variance of the data is indeed suboptimal.
+
+$ $\newline
+As a result, it is desirable to do feature selection among the PCs so that we can balance computational cost and the quality of our PCR model. From the previous section, we know that the SURE can be used as a model selection tool for selecting the regularization parameter for ridge regression. It is then natural to look into extending this framework to LASSO regression on the PCs, which can help us pick the PCs to include in the regression while taking into account the bias-variance trade-off.
+
+$ $\newline
+Given the transformed data matrix $W$, a response vector $y$ consisting of $n$ observations, and a regularization parameter $\lambda\geq0$, LASSO regression finds the regression coefficients of the form
 \[
-\text{Insert principal component formulation.}
+\hbeta_{L,\lambda}(y) = \argmin_{\beta} \frac{1}{n}\|W\beta - y\|_2^2 + \lambda\|\beta\|_1.
 \]
-By treating the above as our data, we can write the LASSO regression solution as follows.
+This L1 penalty term encourages sparse solutions where the regression coefficient for some the transformed predictors are set to $0$. To use the SURE framework to select a subset of the PCs, we require that 1) the resulting estimator $\hbeta_{L,\lambda}$ to be available in closed-form, and 2) we can compute the derivative of this estimator with respect to $y$.
+
+$ $\newline
+In the context of PCR, we know that $W$ is an orthonormal matrix. We know that when the data matrix is orthonormal, there is indeed a closed-form solution for the LASSO estimator
 \[
-\text{Insert LASSO regression solution with orthogonal data matrix.}
+\hbeta_{L,\lambda} = \begin{bmatrix} \sgn(\hbeta_1)(|\hbeta_1| - \lambda)_+ & \cdots & \sgn(\hbeta_p)(|\hbeta_p| - \lambda)_+ \end{bmatrix}^T,
 \]
-Now that we have obtained a closed-form solution to the principal component transformed LASSO problem, we can write the SURE as
+where $\hbeta$ denotes the solution of the ordinary least square problem \citep{gauraha2018introduction}. Note that $\hbeta_{L,\lambda}$ is implicitly a function of the response $y$. Furthermore, \citet{tibshirani2015stein} provides a derivation that shows the divergence term in the SURE expression equals the number of predictors whose corresponding regression coefficient is nonzero (i.e. $\|\hbeta_{L,\lambda}\|_0$). As a result, we can write the SURE of the LASSO estimator on a set of PCs as 
 \[
-\text{Insert SURE with PCR + LASSO.}
+\hat{R}(\lambda) = -n\sigma^2 + \| y - \hbeta_{L,\lambda}(y) \|^2 + 2\sigma^2\|\hbeta_{L,\lambda}\|_0.
 \]
-The last term can be replaced with the number of non-zero coefficients (\citet{tibshirani2015stein}), and we can use a subgradient method to solve for the optimal $\lambda$.
+It now remains to find the optimal $\lambda$ and subsequently the set of PCs with nonzero regression coefficients. Since each dimension of the LASSO estimator, denoted $\hbeta_{L,\lambda,i}$ is non-smooth at $\hbeta_{L,\lambda,i} = \lambda$, we can use subgradient methods in place of regular gradient descent to obtain the optimal $\lambda$ \citep{shor2012minimization}. Instead of selecting the top $k$ PCs to perform PCR, where $k$ is chosen somewhat arbitrarily, an SURE-inspired variable selection procedure proposed here may help achieve a better quality PCR fit with a similar level of reduction in computational cost.
+
 \pagebreak
 
 \subsection{Proposal 2: Efficient cross validation via data subsampling} % enter your proposal title
