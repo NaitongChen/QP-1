@@ -71,7 +71,7 @@ It is worth noting that these methods mentioned above do not take into considera
 $ $\newline
 In the context of model selection for ridge regression, ideally we would like a subsample of the data that well approximates the original dataset for a wide range of $\lambda$ values, or at least the likely $\lambda$ values given the full dataset. From a probabilistic point of view, we know that the ridge estimator is the MAP estimator with Gaussian likelihood for the data and Gaussian prior on the regression parameters (with the variance of each dimension being $\lambda^{-1}$):
 \[
-\hbeta_{\text{ridge},\lambda} = \argmax_{\beta} -\frac{1}{2}\sum_{i=1}^n (x_i^T\beta - y_i)^2 - \frac{\lambda}{2}\|\beta\|^2.
+\hbeta_{\text{ridge},\lambda} = \argmax_{\beta} -\frac{1}{2}\sum_{i=1}^n (x_i^T\beta - y_i)^2 - \frac{\lambda}{2}\|\beta\|_2^2.
 \]
 From a Bayesian perspective, the Gaussian likelihood on the data and Gaussian prior on the regression parameters together give us a posterior distribution of the regression parameters upon observing the data. Note that the above formulation is still specific to a particular $\lambda$ value. Upon imposing another prior distribution over $\lambda$, we can obtain a posterior distribution $\pi$ over $\lambda$ and $\beta$. If we can build a sparse and potentially weighted subset (of size $m$) of the full dataset that has low error across the high density regions of $\pi$, it is possible that we can obtain good generalization properties of the ridge estimator resulted from either the SURE or cross-validation model selection procedure.
 
