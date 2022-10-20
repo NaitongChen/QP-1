@@ -1,5 +1,7 @@
 import autograd.numpy as np
 from SURE_ridge import SURE_ridge
+from k_fold_ridge import k_fold_ridge
+from loocv_ridge import loocv_ridge
 from sklearn.model_selection import train_test_split
 from sklearn.linear_model import RidgeCV
 from sklearn.preprocessing import StandardScaler
@@ -8,7 +10,7 @@ from sklearn.preprocessing import StandardScaler
 ## independent features
 ########################
 
-n = 2000
+n = 200
 d = 2
 X = np.random.normal(loc=[5., 3.], size=(n, d))
 # scaler = StandardScaler()
@@ -49,13 +51,28 @@ print(beta_hat_l_kfold)
 mse_kfold = np.power(np.linalg.norm(beta_hat_l_kfold.ravel() - beta.ravel()), 2)
 test_error_kfold = (1 / X_test.shape[0]) * np.power(np.linalg.norm(kfold.predict(X_test) - y_test), 2)
 
+kfold = k_fold_ridge(X_train, y_train, 1, 5, 1)
+l_kfold = kfold.solve(-.100, 2., 10000)
+beta_hat_l_kfold = sr.beta_hat(l_kfold)
+print(beta_hat_l_kfold)
+mse_kfold = np.power(np.linalg.norm(beta_hat_l_kfold.ravel() - beta.ravel()), 2)
+test_error_kfold = (1 / X_test.shape[0]) * np.power(np.linalg.norm(kfold.predict(X_test) - y_test), 2)
+
 # beta hat from LOOCV
+alphas = np.arange(1,501,1)/100.
 loocv = RidgeCV(alphas = alphas, fit_intercept=False).fit(X_train, y_train)
 l_loocv = loocv.alpha_
 beta_hat_l_loocv = sr.beta_hat(l_loocv)
 print(beta_hat_l_loocv)
 mse_loocv = np.power(np.linalg.norm(beta_hat_l_loocv.ravel() - beta.ravel()), 2)
 test_error_loocv = (1 / X_test.shape[0]) * np.power(np.linalg.norm(loocv.predict(X_test) - y_test), 2)
+
+loocv = loocv_ridge(X_train, y_train, 1, 1)
+l_loocv = loocv.solve(0., 1., 10000)
+beta_hat_l_loocv = sr.beta_hat(l_loocv)
+print(beta_hat_l_loocv)
+mse_loocv = np.power(np.linalg.norm(beta_hat_l_loocv.ravel() - beta.ravel()), 2)
+test_error_loocv = (1 / X_test.shape[0]) * np.power(np.linalg.norm(loocv.predict(l_loocv, X_test) - y_test), 2)
 
 print("-----")
 print([l, 0., l_kfold, l_loocv])
