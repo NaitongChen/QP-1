@@ -24,8 +24,7 @@ class k_fold_ridge():
   def beta_hat(self, X_curr, y_curr, l):
     return self._hat_l_inv(X_curr, l) @ X_curr.T @ y_curr
 
-  def _loss(self, l_unc):
-    l = np.exp(l_unc)
+  def _loss(self, l):
     obj = 0
     for i in np.arange(self.k):
       # fit beta using all observations not in kth fold
@@ -33,17 +32,22 @@ class k_fold_ridge():
       y_curr = self.y[self.ii != i]
       bhat = self.beta_hat(X_curr, y_curr, l)
       # compute prediction error on observations in kth fold
-      residual_pred = self.y[self.ii == i] - self.X[self.ii == i] @ bhat
+      residual_pred = self.y[self.ii == i] - (self.X[self.ii == i] @ bhat)
       obj +=  np.power(np.linalg.norm(residual_pred), 2)
     return obj
 
-  def solve(self, l_unc_0, stepsize, iter):
-    l_unc = l_unc_0
-    loss_grad = grad(self._loss)
-    for i in np.arange(iter):
-      l_unc -= loss_grad(l_unc) * stepsize
-      print(np.exp(l_unc))
-    return np.exp(l_unc)
+  def solve(self, ls):
+    # l_unc = l_unc_0
+    # loss_grad = grad(self._loss)
+    # for i in np.arange(iter):
+    #   l_unc -= loss_grad(l_unc) * stepsize
+    #   print(np.exp(l_unc))
+    # return np.exp(l_unc)
+    ls_size = ls.shape[0]
+    objs = np.zeros(ls_size)
+    for i in np.arange(ls_size):
+      objs[i] = self._loss(ls[i])
+    return objs
 
   def predict(self, l, X_test):
     return X_test @ self.beta_hat(self.X, self.y, l)
