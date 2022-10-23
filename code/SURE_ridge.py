@@ -31,7 +31,7 @@ class SURE_ridge():
     loss_grad = grad(self._loss)
     for i in np.arange(iter):
       l_unc -= loss_grad(l_unc) * stepsize
-      if i % 100 == 0:
+      if i % 1000 == 0:
         print("-----")
         print(i)
         print(np.exp(l_unc))
