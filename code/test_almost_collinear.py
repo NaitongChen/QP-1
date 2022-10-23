@@ -11,7 +11,7 @@ import matplotlib.pyplot as plt
 ## independent features
 ########################
 
-n = 200
+n = 2000
 d = 3
 X = np.random.normal(loc=[-5., -6.], size=(n, d-1))
 X_collinear = -5 * X[:,1] + np.random.normal(scale = 0.1, size=n)
