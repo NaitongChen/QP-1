@@ -25,7 +25,7 @@ X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.25, random
 
 # beta hat with optimized regularization weight
 sr = SURE_ridge(X_train, y_train, 1)
-l = sr.solve(0., 1., 5000)
+l = sr.solve(0., 0.05, 5000)
 print(l)
 beta_hat_l = sr.beta_hat(l)
 print(beta_hat_l)
@@ -36,7 +36,6 @@ alphas = np.arange(1,501,1)/100.
 cv_scores = sr.get_scores(alphas)
 
 # plt.plot(alphas, cv_scores)
-
 
 # beta hat without regularization
 hat = X_train.T @ X_train
