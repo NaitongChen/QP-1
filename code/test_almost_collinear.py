@@ -12,7 +12,7 @@ import matplotlib.pyplot as plt
 ########################
 
 np.random.seed(1)
-sigma = 1.
+sigma = 3.
 n = 5000
 d = 3
 X = np.random.normal(loc=[-5., -6.], scale=[3., 3.],  size=(n, d-1))
@@ -51,7 +51,7 @@ print(beta_hat)
 mse = np.power(np.linalg.norm(beta_hat.ravel() - beta.ravel()), 2)
 test_error = (1 / X_test.shape[0]) * np.power(np.linalg.norm(X_test @ beta_hat - y_test), 2)
 
-alphas = np.arange(1,501,1)/100.
+alphas = np.arange(1,1001,1)/100.
 kfold = k_fold_ridge(X_train, y_train, 1, 10, 100)
 cv_scores = kfold.solve(alphas)
 best_index = np.argmin(cv_scores)
