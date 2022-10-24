@@ -26,6 +26,20 @@ class SURE_ridge():
     return -self.n * self.sigma**2 + residual.T @ residual + 2 * self.sigma**2 * sum(self.ds2 / (self.ds2 + l))
     # return -self.n * self.sigma**2 + residual.T @ residual + 2 * self.sigma**2 * np.trace(self.X.T @ self.X * self._hat_l_inv(l))
 
+  def _rss(self, l_unc):
+    l = np.exp(l_unc)
+    residual = self.y - self.X @ self.beta_hat(l)
+    return residual.T @ residual
+  
+  def _edf(self, l_unc):
+    l = np.exp(l_unc)
+    return 2 * self.sigma**2 * sum(self.ds2 / (self.ds2 + l))
+
+  def _shifted_loss(self, l_unc):
+    l = np.exp(l_unc)
+    residual = self.y - self.X @ self.beta_hat(l)
+    return residual.T @ residual + 2 * self.sigma**2 * sum(self.ds2 / (self.ds2 + l))
+
   def solve(self, l_unc_0, stepsize, iter):
     l_unc = l_unc_0
     loss_grad = grad(self._loss)
@@ -47,4 +61,25 @@ class SURE_ridge():
     objs = np.zeros(ls_size)
     for i in np.arange(ls_size):
       objs[i] = self._loss(np.log(ls[i]))
+    return objs
+
+  def get_rss(self, ls):
+    ls_size = ls.shape[0]
+    objs = np.zeros(ls_size)
+    for i in np.arange(ls_size):
+      objs[i] = self._rss(np.log(ls[i]))
+    return objs
+
+  def get_edf(self, ls):
+    ls_size = ls.shape[0]
+    objs = np.zeros(ls_size)
+    for i in np.arange(ls_size):
+      objs[i] = self._edf(np.log(ls[i]))
+    return objs
+  
+  def get_shifted_loss(self, ls):
+    ls_size = ls.shape[0]
+    objs = np.zeros(ls_size)
+    for i in np.arange(ls_size):
+      objs[i] = self._shifted_loss(np.log(ls[i]))
     return objs

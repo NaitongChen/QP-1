@@ -39,7 +39,16 @@ test_error_SURE = (1 / X_test.shape[0]) * np.power(np.linalg.norm(sr.predict(l, 
 alphas = np.arange(1,2001,1)/100.
 cv_scores = sr.get_scores(alphas)
 
+rss = sr.get_rss(alphas)
+edf = sr.get_edf(alphas)
+shifted_loss = sr.get_shifted_loss(alphas)
+
 # plt.plot(alphas, cv_scores)
+
+plt.plot(alphas, rss)
+# plt.plot(alphas, edf)
+plt.plot(alphas, shifted_loss)
+plt.show()
 
 # beta hat without regularization
 hat = X_train.T @ X_train
