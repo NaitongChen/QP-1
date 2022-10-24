@@ -4,27 +4,51 @@
 
 \section{Project report}
 
-\textbf{SURE with Ridge Regression:}
+In this section, we compare the model selection procedure for ridge regression (i.e. selecting the regularization parameter) using SURE as the objective against those based on k-fold cross-validation. We also include ordinary least squares (OLS) in our comparison as a baseline, representing the case of no regularization. The Python code used to run the experiments and generate the figures can be found at \url{https://github.com/NaitongChen/QP-1}.
 
-Let $y\sim\distNorm\left( X^T\beta, \sigma^2 \right)$, where $y\in\reals$ and $X\in\reals^{p+1}$, $X$ constant. Then with $\biX = \begin{bmatrix} X_1^T \\ \vdots \\ X_n^T \end{bmatrix}$, we have $\biy\sim\distNorm\left( \biX\beta, \sigma^2I \right)$, where $\biy\in\reals^n$ and $\biX\in\reals^{n\times(p+1)}$.
+$ $\newline
+We begin by formulating both the SURE and k-fold cross-validation model selection procedures. Recall in our setting of a linear regression problem, we have $y\sim\distNorm\left( X\beta, \sigma^2I \right)$, where $X\in\reals^{n\times p}$, $y\in\reals^n$, $\sigma>0$. We know that for $\lambda>0$, the ridge estimate of the regression coefficients take on the form
+\[
+\hat{\beta}_{\text{ridge}} = \left( X^TX + \lambda I \right)^{-1}X^Ty,
+\] 
+then we can write our fitted values as
+\[
+\hy_\lambda(y) &= X\hat{\beta}_{\text{ridge}} = X\left( X^TX + \lambda I \right)^{-1}X^Ty.
+\]
+Under this setup, the divergence term can be written as
+\[
+\sum_{i=1}^n \frac{\hy_{\lambda, i}(y)}{\partial y_i} = \sum_{i=1}^n \frac{\partial}{\partial y_i} \left ( X_i^T \left( X^TX + \lambda I \right)^{-1}X^Ty \right) = \tr\left( X\left( X^TX + \lambda I \right)^{-1}X^T \right) = \sum_{j=1}^p \frac{d_j^2}{d_j^2 + \lambda},
+\]
+where the last term is obtained through the singular value decomposition $X = UDV^T$, where $D$ is a diagonal matrix with the singular values $\begin{bmatrix} d_1 & \cdots & d_p \end{bmatrix}$ on the diagonal. We can now write our SURE as
+\[
+\hat{R}(\lambda) &= -n\sigma^2 + \| y - \hy_\lambda(y) \|_2^2 + 2\sigma^2 \sum_{i=1}^n \frac{\hy_{\lambda, i}(y)}{\partial y_i}\\
+&= -n\sigma^2 + \| y - \hy_\lambda(y) \|_2^2 + 2\sigma^2 \sum_{j=1}^p \frac{d_j^2}{d_j^2 + \lambda}\\
+&= -n\sigma^2 + \| y - \hy_\lambda(y) \|_2^2 + 2\sigma^2 \text{edf}(\lambda).
+\]
+Note that $\text{edf}(\lambda)$, the effective degrees of freedom, characterizes the complexity of the model. As $\lambda$ increases, while we reduce the complexity of the model, the sum of squares residual error reflected through $\| y - \hy_\lambda(y) \|_2^2$ will increase. The SURE then reflects this balance of the bias-variance trade-off. To select $\lambda$, we can minimize $\hat{R}$ over $\lambda$ using gradient descent and automatic differentiation. Note that since we require $\lambda>0$, we work in the unconstrained parameter space by applying a $\log$ transformation to $\lambda$.
 
-We know that $\hat{\beta}_{\text{ridge}} = \left( \biX^T\biX + \lambda I_{p+1} \right)^{-1}\biX^T\biy$, then 
-\[
-\hat{\mu}_\lambda(\biy) &= \biX\hat{\beta}_{\text{ridge}} = \biX\left( \biX^T\biX + \lambda I_{p+1} \right)^{-1}\biX^T\biy\\
-\hat{\mu}_{\lambda, i}(\biy) &= X_i^T\hat{\beta}_{\text{ridge}} = X_i^T\left( \biX^T\biX + \lambda I_{p+1} \right)^{-1}\biX^T\biy
-\]
-Then
-\[
-\frac{\hat{\mu}_{\lambda, i}(\biy)}{\partial y_i} &= \frac{\partial}{\partial y_i} \left ( X_i^T \left( \biX^T\biX + \lambda I_{p+1} \right)^{-1}\biX^T\biy \right)\\
-&= \frac{\partial}{\partial y_i} F_i \biy \quad\quad (F_i \defas X_i^T\left( \biX^T\biX + \lambda I_{p+1} \right)^{-1}\biX^T \in \reals^{n})\\
-&= F_{i,i}\\
-&= \left( X_i^T\left( \biX^T\biX + \lambda I_{p+1} \right)^{-1}\biX^T \right)_i.
-\]
-We can now write
-\[
-\hat{R} &= -n\sigma^2 + \| \biy - \hat{\mu}_\lambda(\biy) \|_2^2 + 2\sigma^2 \sum_{i=1}^n \left( X_i^T\left( \biX^T\biX + \lambda I_{p+1} \right)^{-1}\biX^T \right)_i\\
-&= -n\sigma^2 + \| \biy - \hat{\mu}_\lambda(\biy) \|_2^2 + 2\sigma^2 \tr\left( \biX\left( \biX^T\biX + \lambda I_{p+1} \right)^{-1}\biX^T \right)\\
-&= -n\sigma^2 + \| \biy - \hat{\mu}_\lambda(\biy) \|_2^2 + 2\sigma^2 \tr\left( \biX^T\biX\left( \biX^T\biX + \lambda I_{p+1} \right)^{-1} \right)\\
-&= -n\sigma^2 + \| \biy - \hat{\mu}_\lambda(\biy) \|_2^2 + 2\sigma^2 \tr\left( H\left( H + \lambda I_{p+1} \right)^{-1} \right),
-\]
-where the last line is by defining $H\defas\biX^T\biX$. We can optimize $\lambda$ over $\hat{R}$ using autodiff (log-transform $\lambda$ so that it is nonnegative). 
+
+%\textbf{SURE with Ridge Regression:}
+%
+%Let $y\sim\distNorm\left( X^T\beta, \sigma^2 \right)$, where $y\in\reals$ and $X\in\reals^{p+1}$, $X$ constant. Then we have $y\sim\distNorm\left( X\beta, \sigma^2I \right)$, where $\biy\in\reals^n$ and $\biX\in\reals^{n\times p}$.
+%
+%We know that $\hat{\beta}_{\text{ridge}} = \left( X^TX + \lambda I_{p} \right)^{-1}X^Ty$, then 
+%\[
+%\hat{\mu}_\lambda(\biy) &= \biX\hat{\beta}_{\text{ridge}} = \biX\left( \biX^T\biX + \lambda I_{p+1} \right)^{-1}\biX^T\biy\\
+%\hat{\mu}_{\lambda, i}(\biy) &= X_i^T\hat{\beta}_{\text{ridge}} = X_i^T\left( \biX^T\biX + \lambda I_{p+1} \right)^{-1}\biX^T\biy
+%\]
+%Then
+%\[
+%\frac{\hat{\mu}_{\lambda, i}(\biy)}{\partial y_i} &= \frac{\partial}{\partial y_i} \left ( X_i^T \left( \biX^T\biX + \lambda I_{p+1} \right)^{-1}\biX^T\biy \right)\\
+%&= \frac{\partial}{\partial y_i} F_i \biy \quad\quad (F_i \defas X_i^T\left( \biX^T\biX + \lambda I_{p+1} \right)^{-1}\biX^T \in \reals^{n})\\
+%&= F_{i,i}\\
+%&= \left( X_i^T\left( \biX^T\biX + \lambda I_{p+1} \right)^{-1}\biX^T \right)_i.
+%\]
+%We can now write
+%\[
+%\hat{R} &= -n\sigma^2 + \| \biy - \hat{\mu}_\lambda(\biy) \|_2^2 + 2\sigma^2 \sum_{i=1}^n \left( X_i^T\left( \biX^T\biX + \lambda I_{p+1} \right)^{-1}\biX^T \right)_i\\
+%&= -n\sigma^2 + \| \biy - \hat{\mu}_\lambda(\biy) \|_2^2 + 2\sigma^2 \tr\left( \biX\left( \biX^T\biX + \lambda I_{p+1} \right)^{-1}\biX^T \right)\\
+%&= -n\sigma^2 + \| \biy - \hat{\mu}_\lambda(\biy) \|_2^2 + 2\sigma^2 \tr\left( \biX^T\biX\left( \biX^T\biX + \lambda I_{p+1} \right)^{-1} \right)\\
+%&= -n\sigma^2 + \| \biy - \hat{\mu}_\lambda(\biy) \|_2^2 + 2\sigma^2 \tr\left( H\left( H + \lambda I_{p+1} \right)^{-1} \right),
+%\]
+%where the last line is by defining $H\defas\biX^T\biX$. We can optimize $\lambda$ over $\hat{R}$ using autodiff (log-transform $\lambda$ so that it is nonnegative). 

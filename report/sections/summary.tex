@@ -84,7 +84,7 @@ where $\beta\in\reals^p$ for some $p\in\nats$ and for all $i=1,\dots,n$, $x_i\in
 \[
 y = \begin{bmatrix} y_1 & \cdots & y_n \end{bmatrix}^T \distas \distNorm\left(X\beta, \sigma^2I \right), \quad \text{where } X = \begin{bmatrix} x_1 & \cdots & x_n \end{bmatrix}^T.
 \]
-Given a regularization parameter $\lambda\geq0$, we can set
+Note that for the purpose of this report, we assume that the data have been centred, and so an intercept term need not be included. Given a regularization parameter $\lambda\geq0$, we can set
 \[
 \hmu_\lambda(y) = \hbeta_{\text{ridge}, \lambda} = \left( X^TX + \lambda I \right)^{-1}X^Ty,
 \]
