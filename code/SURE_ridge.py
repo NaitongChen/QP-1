@@ -29,7 +29,7 @@ class SURE_ridge():
   def _rss(self, l_unc):
     l = np.exp(l_unc)
     residual = self.y - self.X @ self.beta_hat(l)
-    return residual.T @ residual
+    return residual.T @ residual - self.n * self.sigma**2
   
   def _edf(self, l_unc):
     l = np.exp(l_unc)
