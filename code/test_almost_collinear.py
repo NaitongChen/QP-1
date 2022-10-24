@@ -11,23 +11,25 @@ import matplotlib.pyplot as plt
 ## independent features
 ########################
 
-n = 2000
+np.random.seed(1)
+sigma = 1.
+n = 5000
 d = 3
-X = np.random.normal(loc=[-5., -6.], size=(n, d-1))
+X = np.random.normal(loc=[-5., -6.], scale=[3., 3.],  size=(n, d-1))
 X_collinear = -5 * X[:,1] + np.random.normal(scale = 0.1, size=n)
 X = np.hstack((X, X_collinear.reshape(n, 1)))
 scaler = StandardScaler()
 scaler.fit(X)
 X = scaler.transform(X)
 beta = np.array([2., 3., -1.]).reshape(d, 1)
-y = (X @ beta).ravel() + np.random.normal(size=n)
+y = (X @ beta).ravel() + np.random.normal(scale = sigma, size=n)
 
 # train test split
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.25, random_state=42)
 
 # beta hat with optimized regularization weight
-sr = SURE_ridge(X_train, y_train, 1)
-l = sr.solve(0., 0.01, 10000)
+sr = SURE_ridge(X_train, y_train, sigma)
+l = sr.solve(0., 0.05, 10000)
 print(l)
 beta_hat_l = sr.beta_hat(l)
 print(beta_hat_l)
