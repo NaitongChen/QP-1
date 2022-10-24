@@ -18,13 +18,13 @@ np.random.seed(1)
 sigma = 1.
 n = 100
 d = 3
-X = np.random.normal(loc=[-5., -6., 3.], scale=[1., 1., 1.],  size=(n, d-1))
+X = np.random.normal(loc=[-5., -6.], scale=[1., 1.],  size=(n, d-1))
 X_collinear = -5 * X[:,1] + np.random.normal(scale = 0.01, size=n)
 X = np.hstack((X, X_collinear.reshape(n, 1)))
 scaler = StandardScaler()
 scaler.fit(X)
 X = scaler.transform(X)
-beta = np.array([0., 3., -1., 2.]).reshape(d, 1)
+beta = np.array([2., 3., -1.]).reshape(d, 1)
 y = (X @ beta).ravel() + np.random.normal(scale = sigma, size=n)
 
 test_errors = np.zeros((100,5))
