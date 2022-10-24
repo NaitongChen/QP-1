@@ -18,13 +18,15 @@ np.random.seed(1)
 sigma = 1.
 n = 100
 d = 5
-X = np.random.normal(loc=[-5., -6., 3., 2.], scale=[1., 1., 1., 1.],  size=(n, d-1))
+X = np.random.normal(loc=[-5., 0., 3.], scale=[1., 1., 1.],  size=(n, d-2))
 X_collinear = -5 * X[:,1] + np.random.normal(scale = 0.01, size=n)
+X = np.hstack((X, X_collinear.reshape(n, 1)))
+X_collinear = 1 * X[:,2] + np.random.normal(scale = 0.01, size=n)
 X = np.hstack((X, X_collinear.reshape(n, 1)))
 scaler = StandardScaler()
 scaler.fit(X)
 X = scaler.transform(X)
-beta = np.array([0., 3., -1., 0., 2.]).reshape(d, 1)
+beta = np.array([0., 3., -1., 1., 2.]).reshape(d, 1)
 y = (X @ beta).ravel() + np.random.normal(scale = sigma, size=n)
 
 test_errors = np.zeros((100,5))
@@ -109,7 +111,7 @@ for i in np.arange(100):
     lambdas[i,:] = ([l, 0., l_5fold, l_10fold, l_loocv])
     mses[i,:] = ([mse_sr, mse, mse_5fold, mse_10fold, mse_loocv])
     test_errors[i,:] = np.array([test_error_SURE, test_error, test_error_5fold, test_error_10fold, test_error_loocv])
-    # print("-----")
+    print("-----")
 
 path = os.path.normpath(os.path.join(os.path.dirname( __file__ ), "..", "data", "collinear"))
 fi = open(path, 'wb')
