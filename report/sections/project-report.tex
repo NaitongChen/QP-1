@@ -7,7 +7,7 @@
 In this section, we compare the model selection procedure for ridge regression (i.e. selecting the regularization parameter) using SURE as the objective against those based on k-fold cross-validation. We also include ordinary least squares (OLS) in our comparison as a baseline, representing the case of no regularization. The Python code used to run the experiments and generate the figures can be found at \url{https://github.com/NaitongChen/QP-1}.
 
 $ $\newline
-We begin by formulating both the SURE and k-fold cross-validation model selection procedures. Recall in our setting of a linear regression problem, we have $y\sim\distNorm\left( X\beta, \sigma^2I \right)$, where $X\in\reals^{n\times p}$, $y\in\reals^n$, $\sigma>0$. We know that for $\lambda>0$, the ridge estimate of the regression coefficients take on the form
+We begin by formulating both the SURE and k-fold cross-validation model selection procedures. Recall in our setting of a linear regression problem, we have $y\sim\distNorm\left( X\beta, \sigma^2I \right)$, where $X\in\reals^{n\times p}$, $y\in\reals^n$, $\sigma>0$. Also recall that we assume the data are centred and so an intercept term is not needed. We know that for $\lambda>0$, the ridge estimate of the regression coefficients take on the form
 \[
 \hat{\beta}_{\text{ridge}} = \left( X^TX + \lambda I \right)^{-1}X^Ty,
 \] 
@@ -27,6 +27,23 @@ where the last term is obtained through the singular value decomposition $X = UD
 \]
 Note that $\text{edf}(\lambda)$, the effective degrees of freedom, characterizes the complexity of the model. As $\lambda$ increases, while we reduce the complexity of the model, the sum of squares residual error reflected through $\| y - \hy_\lambda(y) \|_2^2$ will increase. The SURE then reflects this balance of the bias-variance trade-off. To select $\lambda$, we can minimize $\hat{R}$ over $\lambda$ using gradient descent and automatic differentiation. Note that since we require $\lambda>0$, we work in the unconstrained parameter space by applying a $\log$ transformation to $\lambda$.
 
+$ $\newline
+For k-fold cross-validation, we begin by dividing the dataset into $k$ (almost) equal parts of size $N_1,\dots, N_k$ s.t. $\sum_{i=1}^k N_i = N$. We denote the index set of each fold as $\mcI_{N_1}, \dots, \mcI_{N_k}$. Given each fold, we compute the mean square prediction error (MSPE) using the regression coefficients estimated with data from all other folds. We pick the regularization parameter $\lambda$ that minimizes the sum of MSPEs across all folds. We can write the k-fold cross-validation procedure as
+\[
+L(\lambda) = \sum_{i=1}^k \frac{1}{N_i} \sum_{j \in \mcI_{N_i}} \left(y_j - x_j^T\hbeta_{\text{ridge}, j}(\lambda)\right)^2,
+\] 
+where
+\[
+\hbeta_{\text{ridge}, j}(\lambda) = \argmin_{\beta\in\reals^p} \frac{1}{N-N_j}\sum_{l\notin\mcI_{N_j}}(x_l^T\beta - y_l)^2 + \lambda \|\beta\|_2^2.
+\]
+Note that for each $\lambda$, evaluating the loss requires fitting $k$ ridge regression models. In the special case where $k=N$, namely leave-one-out cross-validation (LOOCV), the above loss simplifies to
+\[
+L_{\text{LOOCV}}(\lambda) = \frac{1}{N}\sum_{i=1}^N \left( \frac{y_i - \hbeta_{\text{ridge}}(\lambda)}{1 - H_{\lambda,i}} \right)^2,
+\]
+where $\hbeta_{\text{ridge}}$ is the ridge regression estimate using the entire dataset, and $H_{\lambda,i}$ is the $i^\text{th}$ diagonal entry of $H_\lambda = X(X^TX + \lambda I)^{-1}X^T$.
+
+$ $\newline
+While minimizing $L(\lambda)$ using automatic differentiation and gradient descent is feasible, except for LOOCV, for each optimization iteration, we are required to fit $k$ ridge regression models, making this procedure computationally expensive. As a result, we follow the standard approach of selecting $\lambda$ over a grid of values. It is also important to note that for $k<N$, the k-fold cross-validation procedure is random over the fold assignment.
 
 %\textbf{SURE with Ridge Regression:}
 %
