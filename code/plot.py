@@ -11,6 +11,9 @@ import os
 import sys
 import pandas as pd
 
+plt.rcParams['font.size'] = '20'
+plt.rcParams['figure.autolayout'] = True
+
 # collinear
 path = os.path.normpath(os.path.join(os.path.dirname( __file__ ), "..", "data", "collinear"))
 collinear = pk.load(open(path, 'rb'))
@@ -26,17 +29,20 @@ collinear_test_errors_df = pd.DataFrame(collinear_test_errors, columns=["SURE", 
 path = os.path.normpath(os.path.join(os.path.dirname( __file__ ), "..", "plots", "collinear_lambda.png"))
 plt.boxplot(collinear_lambdas_df, labels=["SURE", "5 fold", "10 fold", "LOO"])
 plt.yscale("log")
+plt.ylabel("lambda")
 plt.savefig(path)
 plt.clf()
 
 path = os.path.normpath(os.path.join(os.path.dirname( __file__ ), "..", "plots", "collinear_mse.png"))
 plt.boxplot(collinear_mses_df, labels=["SURE", "OLS", "5 fold", "10 fold", "LOO"])
 plt.yscale("log")
+plt.ylabel("beta MSE")
 plt.savefig(path)
 plt.clf()
 
 path = os.path.normpath(os.path.join(os.path.dirname( __file__ ), "..", "plots", "collinear_mspe.png"))
 plt.boxplot(collinear_test_errors_df, labels=["SURE", "OLS", "5 fold", "10 fold", "LOO"])
+plt.ylabel("MSPE")
 plt.savefig(path)
 plt.clf()
 
