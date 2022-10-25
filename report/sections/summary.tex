@@ -75,7 +75,7 @@ as an unbiased estimator for the MSE of $\hat{\mu}$.
 $ $\newline
 It is worth noting that the SURE can be employed on a very general class of estimators and that it removes the explicit dependence on the unknown $\mu$. These desirable features have enabled SURE to fuel the development of many estimators that are more superior in MSE than the MLE for parameter estimation problems under the normal distribution and beyond. For instance, under the SURE framework, the James-Stein estimator \citep{james1992estimation} can be shown to be a strictly better estimator in terms of MSE for normally distributed vectors with unit covariance. \cref{lem:slemma} has also been extended to the exponential family, where subsequent estimators outperforming the MLE in terms of MSE have been developed for parameter estimation problems when the underlying distribution is Gamma, Poisson, ect. \citep{hudson1978natural,peng1975simultaneous,tsui1978simultaneous}.
 
-$ $\newline
+\subsection{SURE in model selection}\label{sec:sure_model_selection}
 The SURE has also been found in a wide range of applications beyond merely parameter estimation. As an example, it can be used to perform model selection for ridge regression. In a typical linear regression setting, we are given a set of $n$ observations such that
 \[
 y_i = x_i^T\beta + \eps_i,
@@ -96,7 +96,7 @@ Note that the second term encourages the estimates to be close to the observatio
 \[
 \frac{\hR\left(\lambda^\star\right)}{\inf_{\lambda\geq0}R(\lambda)} \convp 1.
 \]
-$ $\newline
+\subsection{SURE in image denoising}
 SURE has also been widely used in the application of image denoising, where it is most commonly used directly as the objective function under which we find the optimal parameter setting using a set of training images (noisy and noise-less). Typically these parameters control the threshold used to decide whether the corresponding signal should be removed. While SURE directly applies when the noise is assumed to be normally distributed, there have also been methods developed to handle other distributions of noise \citep{donoho1995adapting,luisier2010image,panisetti2014unbiased}. Using a slightly different approach, the SURE framework has also been shown in \citet{metzler2018unsupervised} to be particularly useful in the setting where training images are not available or only noisy images are available without their noise-less counterparts. This is indeed a very common setting in practice: in medical imaging, microscopy, and
 astronomy, noise-less ground truth data are rarely available. Here we discuss this work in more detail. Suppose that for an unobserved noise-less iamge $x\in\reals^n$, we observe a noisy version of the image $y$ such that
 \[

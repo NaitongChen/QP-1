@@ -32,7 +32,8 @@ X = scaler.transform(X)
 beta = np.array([0., 3., -1., 1., 2.]).reshape(d, 1)
 y = (X @ beta).ravel() + np.random.normal(scale = sigma, size=n)
 
-for i in np.arange(100):
+for i in np.arange(1):
+    i = 81
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.25, random_state=i)
 
     ##########
@@ -45,7 +46,7 @@ for i in np.arange(100):
     print(beta_hat_l)
     mse_sr = np.power(np.linalg.norm(beta_hat_l.ravel() - beta.ravel()), 2)
     test_error_SURE = (1 / X_test.shape[0]) * np.power(np.linalg.norm(sr.predict(l, X_test) - y_test), 2)
-    alphas = np.arange(1,2001,1)/100.
+    alphas = np.arange(1,501,1)/100.
     cv_scores_sure = sr.get_scores(alphas)
 
     rss = sr.get_rss(alphas)
@@ -72,7 +73,7 @@ for i in np.arange(100):
     ##########
     # 5 fold
     ##########
-    alphas = np.arange(1,2001,1)/100.
+    alphas = np.arange(1,501,1)/100.
     kfold = k_fold_ridge(X_train, y_train, sigma, 5, i)
     cv_scores_5_fold = kfold.solve(alphas)
 
@@ -86,7 +87,7 @@ for i in np.arange(100):
     ##########
     # 10 fold
     ##########
-    alphas = np.arange(1,2001,1)/100.
+    alphas = np.arange(1,501,1)/100.
     kfold = k_fold_ridge(X_train, y_train, sigma, 10, i)
     cv_scores_10_fold = kfold.solve(alphas)
 
@@ -100,7 +101,7 @@ for i in np.arange(100):
     ##########
     # LOOCV
     ##########
-    alphas = np.arange(1,2001,1)/100.
+    alphas = np.arange(1,501,1)/100.
     loocv = RidgeCV(alphas = alphas, fit_intercept=False, store_cv_values=True).fit(X_train, y_train)
     cv_scores_loocv = np.sum(loocv.cv_values_, 0)
 
