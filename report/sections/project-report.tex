@@ -28,22 +28,22 @@ where the last term is obtained through the singular value decomposition $X = UD
 Note that $\text{edf}(\lambda)$, the effective degrees of freedom, characterizes the complexity of the model. As $\lambda$ increases, while we reduce the complexity of the model, the sum of squares residual error reflected through $\| y - \hy_\lambda(y) \|_2^2$ will increase. The SURE then reflects this balance of the bias-variance trade-off. To select $\lambda$, we can minimize $\hat{R}$ over $\lambda$ using gradient descent and automatic differentiation. Note that since we require $\lambda>0$, we work in the unconstrained parameter space by applying a $\log$ transformation to $\lambda$.
 
 $ $\newline
-For k-fold cross-validation, we begin by dividing the dataset into $k$ (almost) equal parts of size $N_1,\dots, N_k$ s.t. $\sum_{i=1}^k N_i = N$. We denote the index set of each fold as $\mcI_{N_1}, \dots, \mcI_{N_k}$. Given each fold, we compute the mean square prediction error (MSPE) using the regression coefficients estimated with data from all other folds. We pick the regularization parameter $\lambda$ that minimizes the sum of MSPEs across all folds. We can write the k-fold cross-validation procedure as
+For k-fold cross-validation, we begin by dividing the dataset into $k$ (almost) equal parts of size $n_1,\dots, n_k$ s.t. $\sum_{i=1}^k n_i = n$. We denote the index set of each fold as $\mcI_{n_1}, \dots, \mcI_{n_k}$. Given each fold, we compute the mean square prediction error (MSPE) using the regression coefficients estimated with data from all other folds. We pick the regularization parameter $\lambda$ that minimizes the sum of MSPEs across all folds. We can write the k-fold cross-validation procedure as
 \[
-L(\lambda) = \sum_{i=1}^k \frac{1}{N_i} \sum_{j \in \mcI_{N_i}} \left(y_j - x_j^T\hbeta_{\text{ridge}, j}(\lambda)\right)^2,
+L(\lambda) = \sum_{i=1}^k \sum_{j \in \mcI_{N_i}} \left(y_j - x_j^T\hbeta_{\text{ridge}, j}(\lambda)\right)^2,
 \] 
 where
 \[
-\hbeta_{\text{ridge}, j}(\lambda) = \argmin_{\beta\in\reals^p} \frac{1}{N-N_j}\sum_{l\notin\mcI_{N_j}}(x_l^T\beta - y_l)^2 + \lambda \|\beta\|_2^2.
+\hbeta_{\text{ridge}, j}(\lambda) = \argmin_{\beta\in\reals^p} \frac{1}{n-n_j}\sum_{l\notin\mcI_{n_j}}(x_l^T\beta - y_l)^2 + \lambda \|\beta\|_2^2.
 \]
-Note that for each $\lambda$, evaluating the loss requires fitting $k$ ridge regression models. In the special case where $k=N$, namely leave-one-out cross-validation (LOOCV), the above loss simplifies to
+Note that for each $\lambda$, evaluating the loss requires fitting $k$ ridge regression models. In the special case where $k=n$, namely leave-one-out cross-validation (LOOCV), the above loss simplifies to
 \[
-L_{\text{LOOCV}}(\lambda) = \frac{1}{N}\sum_{i=1}^N \left( \frac{y_i - \hbeta_{\text{ridge}}(\lambda)}{1 - H_{\lambda,i}} \right)^2,
+L_{\text{LOOCV}}(\lambda) = \sum_{i=1}^n \left( \frac{y_i - \hbeta_{\text{ridge}}(\lambda)}{1 - H_{\lambda,i}} \right)^2,
 \]
 where $\hbeta_{\text{ridge}}$ is the ridge regression estimate using the entire dataset, and $H_{\lambda,i}$ is the $i^\text{th}$ diagonal entry of $H_\lambda = X(X^TX + \lambda I)^{-1}X^T$.
 
 $ $\newline
-While minimizing $L(\lambda)$ using automatic differentiation and gradient descent is feasible, except for LOOCV, for each optimization iteration, we are required to fit $k$ ridge regression models, making this procedure computationally expensive. As a result, we follow the standard approach of selecting $\lambda$ over a grid of values. It is also important to note that for $k<N$, the k-fold cross-validation procedure is random over the fold assignment.
+While minimizing $L(\lambda)$ using automatic differentiation and gradient descent is feasible, except for LOOCV, for each optimization iteration, we are required to fit $k$ ridge regression models, making this procedure computationally expensive. As a result, we follow the standard approach of selecting $\lambda$ over a grid of values. It is also important to note that for $k<n$, the k-fold cross-validation procedure is random over the fold assignment.
 
 \subsection{Experiments}
 Recall that ridge regression is developed as a method to estimate the coefficients in a linear regression problem where the predictor variables are highly correlated. More specifically, by introducing the regularization parameter $\lambda$, we sacrifice the unbiasedness of the least squares solution in order to reduce the variance of the estimator of the regression coefficients. As a result, we use a synthetic regression problem with highly correlated predictor variables to evaluate the performance of the model selected using SURE compared to k-fold CV and OLS.
@@ -57,7 +57,7 @@ We standardize the features so that each column has mean $0$ and variance $1$. D
 \[
 y = X\beta + \eps, \quad \text{where} \quad \beta=\begin{bmatrix} 0 & 3 & -1 & 1 & 2 \end{bmatrix}^T, \quad \text{and} \quad \eps \sim \distNorm(0, I).
 \]
-Since we know the treu regression coefficients, we can use the mean-squared error between the estimated and true regression coefficients as a metric, in addition to the MSPE, to check how well each method performs. To better assess the performance on average, we randomly split the dataset with $75$ observations in the training set and $25$ in the test set and compare the models across all training and test set splits.
+Since we know the true regression coefficients, we can use the mean-squared error between the estimated and true regression coefficients as a metric, in addition to the MSPE, to check how well each method performs. To better assess the performance on average, we randomly split the dataset with $75$ observations in the training set and $25$ in the test set and compare the models across all training and test set splits.
 
 \captionsetup[subfigure]{labelformat=empty}
 \begin{figure}[t!]
@@ -85,10 +85,10 @@ Since we know the treu regression coefficients, we can use the mean-squared erro
 \end{figure}
 
 $ $\newline
-\cref{fig:mse} shows the side-by-side box plot of the MSE betweeen the true regression coefficients $\beta$ and the estimated regression coefficients $\hbeta$ corresponding to each of the five procedures (SURE, OLS, 5 fold cross-validation, 10 fold cross-validation, and LOOCV) across $100$ trials. We see that OLS has, on average, orders of magnitudes higher errors than the selected model from all over procedures. This is to be expected due to the strong correlations present between pairs of predictor variables in the data. On the other hand, we see that the average $\beta$ MSE between SURE and all other cross-validation methods are similar, with the variance between trials for SURE being much smaller than others. This variance can be explained by the different $\lambda$s selected across different trials, as shown in \cref{fig:lambda}, where the value of the regularization parameter changes more drastically for cross-validation methods.
+\cref{fig:mse} shows the side-by-side box plot of the MSE betweeen the true regression coefficients $\beta$ and the estimated regression coefficients $\hbeta$ corresponding to each of the five procedures (SURE, OLS, 5 fold cross-validation, 10 fold cross-validation, and LOOCV) across $100$ trials. We see that OLS has, on average, orders of magnitudes higher errors than the selected model from all over procedures. This is to be expected due to the strong correlations present between pairs of predictor variables in the data. On the other hand, we see that the average $\beta$-MSE between SURE and all other cross-validation methods are similar, with the variance between trials for SURE being much smaller than others. This variance can be explained by the different $\lambda$s selected across different trials, as shown in \cref{fig:lambda}, where the value of the regularization parameter changes more drastically for cross-validation methods.
 
 $ $\newline
-\cref{fig:mspe} shows the MSPEs for all methods across different trials. Given the similar $\beta$ MSEs, it makes sense that the MSPEs are similar between SURE and all cross-validation methods. It is worth, however, discussing why the MSPE for OLS is also similar to the models selected using other methods. This can be explained using the relationship between the third ($X_3$) and fifth ($X_5$) predictor variables from our synthetic regression problem, where $X_5\approx X_3$. Since we know the true regression coefficients for these two predictor variables are $\beta_3=-1$ and $\beta_5=2$, respectively, as long as the estimated coefficients $\hbeta_3 + \hbeta_5 \approx -1+2=1$, we should not expect a much different MSPE. In this particular problem, while OLS does a worse job of recovering the true regression coefficients, it maintains $\hbeta_3 + \hbeta_5 \approx 1$, thus producing a similar MSPE compared to other methods.
+\cref{fig:mspe} shows the MSPEs for all methods across different trials. Given the similar $\beta$-MSEs, it makes sense that the MSPEs are similar between SURE and all cross-validation methods. It is, however, worth discussing why the MSPE for OLS is also similar to the models selected using other methods. This can be explained using the relationship between the third ($X_3$) and fifth ($X_5$) predictor variables from our synthetic regression problem as an example. Recall that in our synthetic regression problem, $X_5\approx X_3$. Since we know the true regression coefficients for these two predictor variables are $\beta_3=-1$ and $\beta_5=2$, respectively, as long as the estimated coefficients $\hbeta_3 + \hbeta_5 \approx -1+2=1$, we should not expect a much different MSPE. In this particular problem, while OLS does a worse job of recovering the true regression coefficients, it maintains $\hbeta_3 + \hbeta_5 \approx 1$, thus producing a similar MSPE compared to other methods.
 
 \captionsetup[subfigure]{labelformat=empty}
 \begin{figure}[t!]
@@ -151,28 +151,3 @@ Before concluding the report, we discuss a few observations from running the syn
 
 $ $\newline
 Another observation concerns the convexity of the objective functions for all model selection procedures discussed. As noted in \citet{stephenson2021can}, it is possible that the objective function for selecting the ridge regularization parameter through cross-validaiton may not be convex. \cref{fig:convexity} shows, for two randomly selected training sets, the objectives for both the SURE and cross-validation as a function of the regularization parameter $\lambda$. While the objective functions in most of the $100$ trials are convex in $\lambda$, we see that for certain training sets, they could be nonconvex. It is important to note that the observations from these training sets are generated from the same underlying distributions. This makes selecting $\lambda$ using automatic differentiation and gradient descent more challenging. However, it is worth noting that the shape of the objectives between SURE and LOOCV are very similar. We can then possibly leverage the insights from \citet{stephenson2021can} on LOOCV to gauge whether the objection is convex in $\lambda$, and thus decide whether to introduce more complicated optimization algorithms other than gradient descent to deal with the nonconvexity.
-
-%\textbf{SURE with Ridge Regression:}
-%
-%Let $y\sim\distNorm\left( X^T\beta, \sigma^2 \right)$, where $y\in\reals$ and $X\in\reals^{p+1}$, $X$ constant. Then we have $y\sim\distNorm\left( X\beta, \sigma^2I \right)$, where $\biy\in\reals^n$ and $\biX\in\reals^{n\times p}$.
-%
-%We know that $\hat{\beta}_{\text{ridge}} = \left( X^TX + \lambda I_{p} \right)^{-1}X^Ty$, then 
-%\[
-%\hat{\mu}_\lambda(\biy) &= \biX\hat{\beta}_{\text{ridge}} = \biX\left( \biX^T\biX + \lambda I_{p+1} \right)^{-1}\biX^T\biy\\
-%\hat{\mu}_{\lambda, i}(\biy) &= X_i^T\hat{\beta}_{\text{ridge}} = X_i^T\left( \biX^T\biX + \lambda I_{p+1} \right)^{-1}\biX^T\biy
-%\]
-%Then
-%\[
-%\frac{\hat{\mu}_{\lambda, i}(\biy)}{\partial y_i} &= \frac{\partial}{\partial y_i} \left ( X_i^T \left( \biX^T\biX + \lambda I_{p+1} \right)^{-1}\biX^T\biy \right)\\
-%&= \frac{\partial}{\partial y_i} F_i \biy \quad\quad (F_i \defas X_i^T\left( \biX^T\biX + \lambda I_{p+1} \right)^{-1}\biX^T \in \reals^{n})\\
-%&= F_{i,i}\\
-%&= \left( X_i^T\left( \biX^T\biX + \lambda I_{p+1} \right)^{-1}\biX^T \right)_i.
-%\]
-%We can now write
-%\[
-%\hat{R} &= -n\sigma^2 + \| \biy - \hat{\mu}_\lambda(\biy) \|_2^2 + 2\sigma^2 \sum_{i=1}^n \left( X_i^T\left( \biX^T\biX + \lambda I_{p+1} \right)^{-1}\biX^T \right)_i\\
-%&= -n\sigma^2 + \| \biy - \hat{\mu}_\lambda(\biy) \|_2^2 + 2\sigma^2 \tr\left( \biX\left( \biX^T\biX + \lambda I_{p+1} \right)^{-1}\biX^T \right)\\
-%&= -n\sigma^2 + \| \biy - \hat{\mu}_\lambda(\biy) \|_2^2 + 2\sigma^2 \tr\left( \biX^T\biX\left( \biX^T\biX + \lambda I_{p+1} \right)^{-1} \right)\\
-%&= -n\sigma^2 + \| \biy - \hat{\mu}_\lambda(\biy) \|_2^2 + 2\sigma^2 \tr\left( H\left( H + \lambda I_{p+1} \right)^{-1} \right),
-%\]
-%where the last line is by defining $H\defas\biX^T\biX$. We can optimize $\lambda$ over $\hat{R}$ using autodiff (log-transform $\lambda$ so that it is nonnegative). 

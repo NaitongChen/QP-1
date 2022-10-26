@@ -5,22 +5,6 @@
 % each mini-proposal gets its own subsection
 \section{Mini-proposals}
 
-%Given the example of using SURE to tune the L2 penalty term through autodiff, it is natural to try and extend this idea to LASSO regression. However, there are a few problems to consider: 1) LASSO regression only has closed form solutions under specific cases (univariate or orthogonal data matrix), which is required for the use of SURE; 2) even when there is a closed-form solution, the solution function is not smooth and hence not differentiable at the non-smooth part. 
-%
-%To address the first problem, we can consider principal compoent regression (PCR) where we perform regression on the principal components resulted from a principal component analysis (PCA). The principal components form a orthogonal basis and so we can obtain a closed-form solution for LASSO regression if we were to treat the principal components as our data.
-%\[
-%\text{Insert principal component formulation.}
-%\]
-%By treating the above as our data, we can write the LASSO regression solution as follows.
-%\[
-%\text{Insert LASSO regression solution with orthogonal data matrix.}
-%\]
-%Now that we have obtained a closed-form solution to the principal component transformed LASSO problem, we can write the SURE as
-%\[
-%\text{Insert SURE with PCR + LASSO.}
-%\]
-%The last term can be replaced with the number of non-zero coefficients (\citet{tibshirani2015stein}), and we can use a subgradient method to solve for the optimal $\lambda$.
-
 \subsection{Proposal 1: Using SURE to automate cross validation for principal component regression with L1 regularization} % enter your proposal title
 \subsubsection{Motivation and problem formulation}
 Principal component regression (PCR), a regression method based on principal components (PCs) obtained from principal component analyses (PCA), is commonly used in genomics applications among others. This is because, rather than the effect of individual gene expressions, practitioners are typically more interested in studying the effect of groups of genes, which may describe more complicated processes \citep{ding2022sufficient}. 
@@ -29,10 +13,10 @@ $ $\newline
 The general procedure of PCR is typically as follows. Suppose we are given a centred data matrix $X \in \reals^{n\times p}$ and corresponding responses $y\in\reals^n$ consisting of $n$ observations each with $p$ predictors. Let $X = U\Sigma V^T$ denote the singular value decomposition of the data matrix $X$, then $W = XV$ denotes the set of all PCs, a set of transformed feature vectors that form an orthonormal basis, ordered by the amount of variance from the data that each PC explains. One can then perform linear regression on the PCs against the response $y$. Because the PCs are orthogonal to each other, this approach usually leads to better numerical stability than, for example, ordinary least squares. 
 
 $ $\newline
-When the number of predictors is large, a common practice is to perform PCR using only the top $k$ PCs ($k\ll p$), i.e., the PCs that explain the most variance present in the data \citep{cera2019genes,harel2019predicting}. However, it is important to note that the PCs are fit without knowledge of the response variable, and so the idea that performing PRC using the first $k$ PCs will lead to good a good fit of the data is merely a heuristic. In fact, \citet{jolliffe1982note} provides a number of real examples where performing PCR using the first few PCs that explain the most variance of the data is indeed suboptimal.
+When the total number of PCs is large, a common practice is to perform PCR using only the top $k$ PCs ($k\ll p$), i.e., the PCs that explain the most variance present in the data \citep{cera2019genes,harel2019predicting}. However, it is important to note that the PCs are fit without knowledge of the response variable, and so the idea that performing PRC using the first $k$ PCs will lead to good a good fit of the data is merely a heuristic. In fact, \citet{jolliffe1982note} provides a number of real examples where performing PCR using the first few PCs that explain the most variance of the data is indeed suboptimal.
 
 $ $\newline
-As a result, it is desirable to do feature selection among the PCs so that we can balance computational cost and the quality of our PCR model. From the previous section, we know that the SURE can be used as a model selection tool for selecting the regularization parameter for ridge regression. It is then natural to look into extending this framework to LASSO regression on the PCs, which can help us pick the PCs to include in the regression while taking into account the bias-variance trade-off.
+As a result, it is desirable to do feature selection among the PCs so that we can balance the number of active predictors and the quality of our PCR model. From the previous section, we know that the SURE can be used as a model selection tool for selecting the regularization parameter for ridge regression. It is then natural to look into extending this framework to LASSO regression on the PCs, which can help us pick the PCs to include in the regression while taking into account the bias-variance trade-off.
 
 \subsubsection{Proposed approach}
 Given the transformed data matrix $W$, a response vector $y$ consisting of $n$ observations, and a regularization parameter $\lambda\geq0$, LASSO regression finds the regression coefficients of the form
@@ -60,50 +44,33 @@ Following the notation from the previous sections, given a data matrix $X\in\rea
 \[
 \hbeta_{\text{ridge}, \lambda}(y) = \left( X^TX + \lambda I \right)^{-1}X^Ty,
 \]
-which has a computational complexity of $O(np^2)$. In the context of model selection by minimizng the SURE, one way to obtain the optimal regularization parameter is to run the gradient descent algorithm with respect to $\lambda$ with the SURE being the objective function. This requires, at each iteration of the optimization, evaluating the derivative of SURE with respect to $\lambda$, which involves the term $\hbeta_{\text{ridge}, \lambda}(y)$. Therefore, for $K$ steps of gradient descent, the computational complexity is at least in the order of $O(Knp^2)$. In the large-data regime where there are many observations, the cost of this procedure grows linearly with the number of optimization iterations, which can potentially be extremely expensive. Similarly, in the perhaps more commonly used $K$-fold cross-validation procedure, we need to compute $\hbeta_{\text{ridge}, \lambda}$ for each of the $K$ folds of the data. Then if $K$ is also large (e.g. leave-one-out cross-validation), the computational cost could also be expensive.
+which has a computational complexity of $O(np^2)$. In the context of model selection by minimizng the SURE, one way to obtain the optimal regularization parameter is to automatic differentiation and run the gradient descent algorithm with respect to $\lambda$ with the SURE being the objective function. This requires, at each iteration of the optimization, evaluating the derivative of SURE with respect to $\lambda$, which involves the term $\hbeta_{\text{ridge}, \lambda}(y)$. Therefore, for $K$ steps of gradient descent, the computational complexity is at least in the order of $O(Knp^2)$. In the large-data regime where there are many observations, the cost of this procedure grows linearly with the number of optimization iterations, which can potentially be extremely expensive. Similarly, in the perhaps more commonly used $K$-fold cross-validation procedure, we need to compute $\hbeta_{\text{ridge}, \lambda}$ for each of the $K$ folds of the data. Then if $K$ is also large, the computational cost could also be expensive.
 
 $ $\newline
-To reduce the computational complexity of such procedures, one approach is to use a representative subsample of size $m$ ($m\ll n$) in place of the full datase to perform model selection. If the subsample is indeed representative of the full dataset, we can greatly reduce the computational cost without greatly hindering the quality of the selected model. Existing approaches for subsample selection include leverage score based and volume sampling based methods. More specifically, one can either use the leverage scores to form an importance distribution from which we sample of the observations, or use the idea of volume sampling to select a subsample that minimizes the Frobenius norm between the original data matrix and the projection onto the space spanned by the selected subset \citep{ma2014statistical,avron2010blendenpik}.
+To reduce the computational complexity of such procedures, one approach is to use a representative subsample of size $m$ ($m\ll n$) in place of the full datase to perform model selection. If the subsample is representative of the full dataset, we can reduce the computational cost without greatly hindering the quality of the selected model. Existing approaches for subsample selection include leverage score based and volume sampling based methods. More specifically, one can either use the leverage scores to form an importance distribution from which we sample the observations, or use the idea of volume sampling to select a subsample that minimizes the Frobenius norm between the original data matrix and the projection onto the space spanned by the selected subset \citep{ma2014statistical,avron2010blendenpik}.
 
 $ $\newline
 It is worth noting that these methods mentioned above do not take into consideration the subsequet model selection step while constructing the subset. While there has been some work that concerns the generalization error of the ridge estimator based on a subset of the data, their result only holds for $\lambda$ values that are bounded by some function of the true regression coefficients, which are not known a priori \citep{derezinski2017subsampling}.
-\subsubsection{Proposed approach}
-In the context of model selection for ridge regression, ideally we would like a subsample of the data that well approximates the original dataset for a wide range of $\lambda$ values, or at least the likely $\lambda$ values given the full dataset. From a probabilistic point of view, we know that the ridge estimator is the MAP estimator with Gaussian likelihood for the data and Gaussian prior on the regression parameters (with the variance of each dimension being $\lambda^{-1}$):
-\[
-\hbeta_{\text{ridge},\lambda} = \argmax_{\beta} -\frac{1}{2}\sum_{i=1}^n (x_i^T\beta - y_i)^2 - \frac{\lambda}{2}\|\beta\|_2^2.
-\]
-From a Bayesian perspective, the Gaussian likelihood on the data and Gaussian prior on the regression parameters together give us a posterior distribution of the regression parameters upon observing the data. Note that the above formulation is still specific to a particular $\lambda$ value. Upon imposing another prior distribution over $\lambda$, we can obtain a posterior distribution $\pi$ over $\lambda$ and $\beta$. If we can build a sparse and potentially weighted subset (of size $m$) of the full dataset that has low error across the high density regions of $\pi$, it is possible that we can obtain good generalization properties of the ridge estimator resulted from either the SURE or cross-validation model selection procedure.
 
 $ $\newline
+In the context of model selection for ridge regression, ideally we would like a subsample of the data that well approximates the original dataset for a wide range of $\lambda$ values, or at least the likely $\lambda$ values given the full dataset. From a probabilistic point of view, we know that the ridge estimator is the MAP estimator with Gaussian likelihood for each observation (with mean $x_i^T\beta$ and variance $\sigma^2$) and Gaussian prior on the regression parameters (with the mean of each dimension being $0$ and variance $\tau^2$):
+\[
+\hbeta_{\text{ridge},\lambda} = \argmax_{\beta} -\frac{1}{2}\sum_{i=1}^n (x_i^T\beta - y_i)^2 - \frac{\sigma^2 / \tau^2}{2}\|\beta\|_2^2,
+\]
+where we can set $\lambda = \frac{\sigma^2}{\tau^2}$. From a Bayesian perspective, the Gaussian likelihood on the data and Gaussian prior on the regression parameters together give us a posterior distribution of the regression parameters upon observing the data. Note that the above formulation is still specific to a particular $\lambda$ value. Upon imposing another prior distribution over $\tau$, we can obtain a posterior distribution $\pi$ over $\tau$ and $\beta$, and subsequently $\lambda$. If we can build a sparse and potentially weighted subset (of size $m$) of the full dataset that has low error across the high density regions of $\pi$, it is possible to obtain good generalization properties of the ridge estimator resulted from either the SURE or cross-validation model selection procedure.
+
+\subsubsection{Proposed approach}
 One way to formulate this idea is as follows. Given an approximation of the posterior distribution over $\lambda$ and $\beta$, which we denote $\hpi$, we would like to find a set of weights $w \in\reals_+^n$, $\|w\|_0 \leq m$, that minimizes
 \[
-\left\| \sum_{i=1}^n \mcL_i - \sum_{i=1}^n w_i \mcL_i \right\|_{\hpi, 2},
+\left\| \sum_{i=1}^n \mcL_i - \sum_{i=1}^n w_i \mcL_i \right\|_{\hpi, 2}^2,
 \]
-where $\mcL_i$ is the Gaussian log likelihood for the $i^\text{th}$ observation, and $\|\cdot\|_{\hpi, 2}$ denotes a weighted $L^2$ norm on the log likelihoods. It turns out that this is precisely the objective for one of the Bayesian coreset construction algorithms, where we can construct a sparse, weighted subsample of the original dataset \citep{campbell2019automated}. Since we know that there exists closed-form solutions for weighted least squares, we can use this Bayesian coreset to construct our ridge regression models and to subsequently perform model selection either through SURE or cross-validation \citep{strutz2011data}.
+where $\mcL_i$ is the Gaussian log likelihood for the $i^\text{th}$ observation, and $\|\cdot\|_{\hpi, 2}$ denotes a $\hpi$-weighted $L^2$ norm on the log likelihoods. It turns out that this is precisely the objective for one of the Bayesian coreset construction algorithms, where we can construct a sparse, weighted subsample of the original dataset \citep{campbell2019automated}. Since we know that there exists closed-form solutions for weighted least squares, we can use this Bayesian coreset to construct our ridge regression models and to subsequently perform model selection either through SURE or cross-validation \citep{strutz2011data}.
 
 $ $\newline
-In \citet{campbell2019automated}, a bound on the above objective using the set of weights obtained through random projection \citep{rahimi2007random} along with samples from $\hpi$ is provided. In particular, this bound is funciton of $m$ that decreases as $m$ increases. Given the connection between the ridge estimator and its underlying posterior distribution, we should expect to see good generalization properties of the selected model constructed using Bayesian coresets.
+In \citet{campbell2019automated}, a bound on the above objective under the set of optimal weights obtained using random projection \citep{rahimi2007random} and samples from $\hpi$ is provided. In particular, this bound is a function of $m$ that decreases as $m$ increases. Given the connection between the ridge estimator and its underlying posterior distribution, we should expect to see good generalization properties of the selected model constructed using Bayesian coresets.
 
 $ $\newline
-In order to construct Bayesian coresets through the above formulation, we need to be able to take samples from $\hpi$. We note that ridge regression corresponds to a posterior distribution with a Gaussian likelihood on the data and a Gaussian prior on the regression coefficients. Therefore, with an appropriate choice of the prior on $\lambda$ (e.g. Gaussian), it should not be difficult to obtain a $\hpi$ that well approximates the true posterior. One option to construct $\hpi$ is to use the Laplace approximaiton \citep{bishop2006pattern}. It remains now to explore the effect that different choices of the prior on $\lambda$ has on the quality of the selected ridge regression model, either through SURE or cross-validation.
-
-%In the large-data regime where the number of observations is much greater than the number of predictors ($n\gg p$), solving the OLS problem and/or ridge regression can be computationally expensive. Especially during hyperparameter turning in ridge regression, where we'd solve the same problem with a subset of the data $k$ times if we were using a $k$-fold cross validation procedure. 
-%
-%If we were able to select a sparse, weighted subsample of the data that still contains information about the full dataset, we can greatly reduce the computational cost of this procedure. However, since both the $\beta$ and $L2$ penalty term $\lambda$ are unknown prior to solving the regression problem, we need to ensure our selected subsample gives us a good approximation of the full dataset across a wide range of $\beta$ and $\lambda$ values, or at least for $\beta$ and $\lambda$ values that we will likely get.
-%
-%This notion of a good approximation over the high density region of some distribution aligns well with the Bayesian point of view. We can therefore leverage the idea of Bayesian coresets to construct our sparse, weighted subsample.
-%\[
-%\text{Insert description of Bayesian coresets.}
-%\]
-%This approach makes intuitive sense as we can associate the ridge regression estimate to the MAP estimate of the coefficients with a Gaussian prior (whose variance is speficied by $\lambda$). Note that the Gaussian prior still fixes a $\lambda$ value. To make our constructed subsample a good approximation over various $\lambda$ values, we can introduce a prior on the variance of the ridge regression coefficients. 
-%
-%Depending on the choice of the prior on $\lambda$, we could potentially have closed form solutions of the posterior distribution over the ridge regression coefficients. This then could enable us to efficiently build a sparse, weighted subsample that well approximates the full dataset over a wide range of $\beta$ and $\lambda$ values.
-%\[
-%\text{Insert weighted linear regression (with L2 regularization) closed-form solutions.}
-%\]
-%With the above closed-form solutions to the weighted ridge regression problem, we can now perform cross validation either through the regular approach or the SURE approach discussed in the following section of the report, with much lower computational costs.
-
-
+In order to construct Bayesian coresets through the above formulation, we need to be able to take samples from $\hpi$. We note that ridge regression corresponds to a posterior distribution with a Gaussian likelihood on the data and a Gaussian prior on the regression coefficients. Therefore, with an appropriate choice of the prior on $\tau$, it should not be difficult to obtain a $\hpi$ that well approximates the true posterior. One option to construct $\hpi$ is to use the Laplace approximaiton \citep{bishop2006pattern}. It remains to explore the effect that different choices of the prior on $\lambda$ has on the quality of the selected ridge regression model, either through SURE or cross-validation.
 
 % each mini-proposal gets its own subsection
 % ...
