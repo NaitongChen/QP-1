@@ -37,12 +37,6 @@ class k_fold_ridge():
     return obj
 
   def solve(self, ls):
-    # l_unc = l_unc_0
-    # loss_grad = grad(self._loss)
-    # for i in np.arange(iter):
-    #   l_unc -= loss_grad(l_unc) * stepsize
-    #   print(np.exp(l_unc))
-    # return np.exp(l_unc)
     ls_size = ls.shape[0]
     objs = np.zeros(ls_size)
     for i in np.arange(ls_size):
